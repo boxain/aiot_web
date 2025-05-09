@@ -1,10 +1,10 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 
-const getDeviceAPI = async (id: string) => {
+const connectionDeviceAPI = async (ssid: string, password: string) => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/device/${id}`;
+        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/device/connection`;
         const access_token = Cookies.get("access_token");
         const token_type = Cookies.get("token_type");
         
@@ -15,7 +15,8 @@ const getDeviceAPI = async (id: string) => {
             }
         }
 
-        const response = await axios.get(requestURI, headers);
+        const requestBody = { ssid, password }
+        const response = await axios.post(requestURI, requestBody, headers);
         return response.data;
 
 
@@ -33,4 +34,4 @@ const getDeviceAPI = async (id: string) => {
     }
 }
 
-export default getDeviceAPI
+export default connectionDeviceAPI

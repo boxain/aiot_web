@@ -2,6 +2,7 @@
 
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import verificationAPI from "@/api/user/verifyToken";
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
 
 
@@ -34,6 +35,34 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     const [isSignIn, setIsSignIn] = useState(false);
     const router = useRouter();
 
+    const IsLogin = async () => {
+        const access_token = Cookies.get("access_token");
+        const token_type = Cookies.get("token_type");
+
+        if (!access_token || !token_type) {
+            router.push("/user/login")
+        }else{
+            const result = await verificationAPI(access_token, token_type);
+            if(result.success){
+                setUser({
+                    id: result.data.user_id,
+                    name: result.data.username,
+                    email: result.data.email
+                });
+                router.push("/");
+            }else{
+                router.push("/user/login")
+            }
+
+        }
+    }
+
+
+    useEffect(() => {
+        IsLogin()
+    },[])
+
+
     const login = (id: string, name: string, email: string, access_token: string, token_type: string) => {
         setUser({id,name,email});
         Cookies.set("access_token", access_token);
@@ -56,5 +85,3 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
 export const useAuth = () => {
     return useContext(AuthContext);
 }
-
-

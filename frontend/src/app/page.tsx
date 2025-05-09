@@ -12,9 +12,3 @@ export default function Home() {
     </>
   );
 }
-
-/**
- * 1. 重整驗證 token
- * 2. 頁面判斷登入狀態
- * 3. 修復 AxiosError Type
- */

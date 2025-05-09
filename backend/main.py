@@ -25,6 +25,7 @@ origins = [
     "http://localhost:3000"
 ]
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,10 +40,13 @@ app.include_router(device_router, prefix="/api/device", tags=["device"])
 
 
 if __name__ == '__main__':
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="debug")
+    # https://myapollo.com.tw/blog/begin-to-asyncio/#google_vignette
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, workers=1, ws_ping_interval=600, log_level="info")
 
 '''
-1. re-login 
+1. device connection tool intergrate
 2. mode switch - https://docs.espressif.com/projects/esp-idf/zh_CN/v5.4.1/esp32/api-guides/low-power-mode/index.html
-3. image resize
+3. OTA
+4. Model Deployment
+5. image resize
 '''

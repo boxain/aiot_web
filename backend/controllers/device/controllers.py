@@ -1,4 +1,5 @@
 import traceback
+from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -10,20 +11,29 @@ from models.device_model import Device
 class DeviceController:
     
     @classmethod
-    async def create_device(cls, db: AsyncSession, params: ReqeustSchema.CreateDeviceParams):
+    async def create_device(cls, db: AsyncSession, mac: str):
         try:
-            device_dict = params.model_dump()
+
+            query = select(Device.id).where(Device.mac == mac)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+            if device:
+                return device.id
+            
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            device_dict = {
+                "name": f"Device_{timestamp}",
+                "mac": mac,
+                "description": "",
+            }
+
             device = Device(**device_dict)
             db.add(device)
             await db.commit()
+            await db.refresh(device)
+            return device.id
 
-            return { 
-                "success": True,
-                "data": {
-                    "device_id": device.id
-                },
-                "message": "Create device sucessfully."
-            }
 
         except SQLAlchemyError as e:
             await db.rollback()
@@ -81,5 +91,7 @@ class DeviceController:
 
 
     @classmethod
-    async def get_device_with_userId(cls, db: AsyncSession, user_id: str):
-        pass
+    async def connection(cls, params: ReqeustSchema.ConnectionParams): 
+        # perform ESP-IDF connection
+        print("ssid: ", params.ssid)
+        print("password: ", params.password)

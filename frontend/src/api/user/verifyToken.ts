@@ -1,16 +1,15 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 
-const getDeviceAPI = async (id: string) => {
+
+const verificationAPI = async (access_token: string, token_type: string) => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/device/${id}`;
-        const access_token = Cookies.get("access_token");
-        const token_type = Cookies.get("token_type");
+        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/user/verification`;
         
         const headers = {
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "multipart/form-data",
                 "Authorization": `${token_type} ${access_token}`
             }
         }
@@ -33,4 +32,4 @@ const getDeviceAPI = async (id: string) => {
     }
 }
 
-export default getDeviceAPI
+export default verificationAPI

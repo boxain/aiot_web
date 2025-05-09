@@ -19,7 +19,7 @@ const getDevicesAPI = async () => {
         return response.data;
 
 
-    }catch(error: AxiosError){
+    }catch(error: any){
 
         if(error.response){
             return error.response.data

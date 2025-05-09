@@ -20,7 +20,7 @@ const loginAPI = async (userName: string, password: string) => {
         return response.data;
 
 
-    }catch(error: AxiosError){
+    }catch(error: any){
 
         if(error.response){
             return error.response.data

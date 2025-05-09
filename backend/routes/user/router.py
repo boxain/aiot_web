@@ -24,6 +24,15 @@ async def register(params: RequestScheme.CreateUserParams, db: AsyncSession = De
     return await UserController.register(db=db, params=params)
 
 
+@router.get("/verification")
+async def verify_token(current_user = Depends(UserController.get_current_user)):
+    return {
+        "success": True,
+        "data": current_user,
+        "message": "verify sucessfully."
+    }
+
+
 @router.websocket("/ws/{user_id}")
 async def websocket_init(websocket: WebSocket, user_id: str):
     # https://github.com/fastapi/fastapi/issues/2370

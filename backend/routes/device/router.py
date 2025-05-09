@@ -35,13 +35,18 @@ async def get_device_with_id(device_id: str, db: AsyncSession = Depends(get_db),
     return await DeviceController.get_device_with_deviceId(db=db, device_id=device_id)
 
 
-async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue: asyncio.Queue, user_id:str, mac_id: str, manager: ConnectionManager):
+@router.post("/connection")
+async def connection(params: ReqeustScheme.ConnectionParams, current_user = Depends(UserController.get_current_user)):
+    return await DeviceController.connection(params=params)
+
+
+async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue: asyncio.Queue, user_id:str, device_id: str, manager: ConnectionManager):
     while True:
         try:
             text_mes = await text_queue.get()
             
             if text_mes is None:
-                print(f"Server received termination signal from {mac_id}")
+                print(f"Server received termination signal from {device_id}")
                  
             data = json.loads(text_mes)
             print("Received data: ", data)
@@ -61,7 +66,7 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                         binary_mes = await binary_queue.get()
                         
                         if binary_mes is None:
-                            print(f"Server received wrong inference serial from {mac_id}")
+                            print(f"Server received wrong inference serial from {device_id}")
                             continue
 
                         await manager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=binary_mes)
@@ -71,11 +76,11 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                     
                             bounding_boxes = content.get("bounding_boxes")
                             if not isinstance(bounding_boxes, list):
-                                print(f"{mac_id} Error: bounding_boxes is not a list.")
+                                print(f"{device_id} Error: bounding_boxes is not a list.")
                             
                             
 
-                            print(f"{mac_id} Processing image...")
+                            print(f"{device_id} Processing image...")
 
 
                             image_stream = io.BytesIO(binary_mes)
@@ -93,7 +98,7 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                                         width=3
                                     )
                                 else:
-                                    print(f"[{mac_id}] Warning: Invalid bounding box format: {box}")
+                                    print(f"[{device_id}] Warning: Invalid bounding box format: {box}")
                             
 
                             # try:
@@ -133,15 +138,17 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
             print(e)
 
 
-@router.websocket("/ws/{user_id}/{mac_id}")
-async def websocket_init(websocket: WebSocket, user_id: str, mac_id: str):
+@router.websocket("/ws/{user_id}/{mac}")
+async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: AsyncSession = Depends(get_db)):
     text_queue = asyncio.Queue(maxsize=50)
     binary_queue = asyncio.Queue(maxsize=50)
     
     try:
+        device_id = await DeviceController.create_device(db=db, mac=mac)
+
         await websocket.accept()
-        await ConnectionManager.connect_device(mac_id=mac_id, websocket=websocket)
-        asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, user_id, mac_id, ConnectionManager))
+        await ConnectionManager.connect_device(device_id=device_id, websocket=websocket)
+        asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, user_id, device_id, ConnectionManager))
 
         while True:
             
@@ -151,29 +158,28 @@ async def websocket_init(websocket: WebSocket, user_id: str, mac_id: str):
                 try:
                     await asyncio.wait_for(text_queue.put(data.get("text", None)), timeout=1.0)
                 except asyncio.TimeoutError:
-                    print(f"Queue put timed out for text message from {mac_id}. Queue might be full.")
+                    print(f"Queue put timed out for text message from {device_id}. Queue might be full.")
 
 
             elif "bytes" in data:
                 try:
                      await asyncio.wait_for(binary_queue.put(data.get("bytes", None)), timeout=1.0)
                 except asyncio.TimeoutError:
-                     print(f"Queue put timed out for bytes message from {mac_id}. Queue might be full.")
+                     print(f"Queue put timed out for bytes message from {device_id}. Queue might be full.")
 
             
 
     except WebSocketDisconnect:
         print("Websocket disconnected")
-        await ConnectionManager.disconnect_device(mac_id=mac_id)
+        await ConnectionManager.disconnect_device(device_id=device_id)
     
     except WebSocketException:
         print("Websocket exception")
-        await ConnectionManager.disconnect_device(mac_id=mac_id)
+        await ConnectionManager.disconnect_device(device_id=device_id)
 
     except Exception as e:
         print(traceback.format_exc())
-        print("Unknown excpetion")
-
+        print("Unknown exception")
 
 
 @router.get("/start_inference/{mac_id}")
@@ -182,7 +188,6 @@ async def start_inference(mac_id: str):
         "action": "START_INFERENCE"
     }
     await ConnectionManager.send_message_to_device(mac_id, message)
-
 
 
 @router.get("/stop_inference/{mac_id}")

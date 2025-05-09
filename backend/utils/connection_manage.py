@@ -7,32 +7,32 @@ class ConnectionManager:
 
 
     @classmethod
-    async def connect_device(cls, mac_id: str, websocket: WebSocket):
-        if(mac_id in cls.active_devices):
-            old_connected: WebSocket = cls.active_devices.get(mac_id)
+    async def connect_device(cls, device_id: str, websocket: WebSocket):
+        if(device_id in cls.active_devices):
+            old_connected: WebSocket = cls.active_devices.get(device_id)
             await old_connected.close()
-            del cls.active_devices[mac_id]
-            print(f"Delete existed device websocket connection, user_id: {mac_id}")
-        cls.active_devices[mac_id] = websocket
-        print(f"Created websocket device connection, user_id: {mac_id}")
+            del cls.active_devices[device_id]
+            print(f"Delete existed device websocket connection, user_id: {device_id}")
+        cls.active_devices[device_id] = websocket
+        print(f"Created websocket device connection, device_id: {device_id}")
         
 
     @classmethod
-    async def disconnect_device(cls, mac_id: str):
-        if(mac_id in cls.active_devices):
-            old_connected: WebSocket = cls.active_devices.get(mac_id)
+    async def disconnect_device(cls, device_id: str):
+        if(device_id in cls.active_devices):
+            old_connected: WebSocket = cls.active_devices.get(device_id)
             await old_connected.close()
-            del cls.active_devices[mac_id]
-        print(f"Delete existed device websocket connection, user_id: {mac_id}")
+            del cls.active_devices[device_id]
+        print(f"Delete existed device websocket connection, device_id: {device_id}")
 
 
     @classmethod
-    async def send_message_to_device(cls, mac_id: str, message: str):
-        if(mac_id in cls.active_devices):
-            websocket_connection: WebSocket = cls.active_devices[mac_id]
+    async def send_message_to_device(cls, device_id: str, message: str):
+        if(device_id in cls.active_devices):
+            websocket_connection: WebSocket = cls.active_devices[device_id]
             await websocket_connection.send_json(message)
         else:
-            print(f"Websocket connection doen't exist for mac_id: {mac_id}")  
+            print(f"Websocket connection doen't exist for device_id: {device_id}")  
 
 
     @classmethod    
