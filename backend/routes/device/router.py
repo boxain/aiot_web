@@ -182,17 +182,30 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
         print("Unknown exception")
 
 
-@router.get("/start_inference/{mac_id}")
-async def start_inference(mac_id: str):
+@router.get("/continuous_mode/{device_id}")
+async def start_inference(device_id: str):
     message = {
-        "action": "START_INFERENCE"
+        "action": "MODE_SWITCH",
+        "mode": "CONTINUOUS_MODE"
     }
-    await ConnectionManager.send_message_to_device(mac_id, message)
+    await ConnectionManager.send_message_to_device(device_id, message)
+    return {"message": "Device switched to continuous mode"}
 
 
-@router.get("/stop_inference/{mac_id}")
-async def stop_inference(mac_id: str):
+@router.get("/stand_by_mode/{device_id}")
+async def stop_inference(device_id: str):
     message = {
-        "action": "STOP_INFERENCE"
+        "action": "MODE_SWITCH",
+        "mode": "STAND_BY_MODE"
     }
-    await ConnectionManager.send_message_to_device(mac_id, message)
+    await ConnectionManager.send_message_to_device(device_id, message)
+    return {"message": "Device switched to stand by mode"}
+
+
+@router.get("/inference/{device_id}")
+async def stop_inference(device_id: str):
+    message = {
+        "action": "INFERENCE",
+    }
+    await ConnectionManager.send_message_to_device(device_id, message)
+    return {"message": "Device switched to stand by mode"}

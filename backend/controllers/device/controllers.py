@@ -16,9 +16,9 @@ class DeviceController:
 
             query = select(Device.id).where(Device.mac == mac)
             result = await db.execute(query)
-            device = result.scalar_one_or_none()
-            if device:
-                return device.id
+            device_id = result.scalar_one_or_none()
+            if device_id:
+                return str(device_id)
             
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -32,7 +32,7 @@ class DeviceController:
             db.add(device)
             await db.commit()
             await db.refresh(device)
-            return device.id
+            return str(device.id)
 
 
         except SQLAlchemyError as e:
