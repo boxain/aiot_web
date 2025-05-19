@@ -3,7 +3,7 @@
 
 import PageTitle from '@/components/PageTitle';
 import SwitchPageButtom from '@/components/SwitchPageButtom';
-import DevicesDashboard from '@/components/Device/DevicesDashboard';
+import DevicesDashboard from '@/components/device/DevicesDashboard';
 
 
 export default function DevicePage() {

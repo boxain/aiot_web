@@ -1,9 +1,24 @@
 import Link from 'next/link';
 import { Camera } from "lucide-react";
-import { DeviceCardProps } from "@/components/Device/types"
+import { DeviceCardProps } from "@/components/device/types"
 
-const DeviceCard = ({ device } : DeviceCardProps) => {
+const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } : DeviceCardProps) => {
   
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const deviceId = device.id; 
+    const isChecked = event.target.checked;
+
+    setSelectedDevices(prevSelectedDevices => {
+      if (isChecked) {
+        if (!prevSelectedDevices.includes(deviceId)) {
+          return [...prevSelectedDevices, deviceId];
+        }
+      } else {
+        return prevSelectedDevices.filter(id => id !== deviceId);
+      }
+        return prevSelectedDevices;
+    });
+  };
 
   const statusCSSColor = () => {
     switch (device.status) {
@@ -18,13 +33,22 @@ const DeviceCard = ({ device } : DeviceCardProps) => {
     }
   }
 
-
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
-
+        
         {/* Device status */}
-        <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block mb-2 ${statusCSSColor()}`}>
-          {device.status || "Developed"}
+        <div className='flex items-center justify-between'>
+          <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block mb-2 ${statusCSSColor()}`}>
+            {device.status || "Developed"}
+          </div>
+          { isSelectDevice && 
+            <input 
+              type='checkbox' 
+              checked={isSelected}
+              className="form-checkbox h-5 w-5 text-blue-600 rounded cursor-pointer" 
+              onChange={handleCheckboxChange}
+            />
+          }
         </div>
 
         {/* Device name */}

@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 export interface Device {
   status: "Connected" | "Disconnected" | "Busy";
   id: string;
@@ -9,4 +11,7 @@ export interface Device {
 
 export interface DeviceCardProps {
   device: Device;
+  isSelectDevice: boolean;
+  isSelected: boolean;
+  setSelectedDevices: Dispatch<SetStateAction<string[]>>;
 }

@@ -1,4 +1,4 @@
-import DeviceDetails from "@/components/Device/DeviceDetail"
+import DeviceDetails from "@/components/device/DeviceDetail"
 
 const DeviceDetailPage = () => {
     return (
