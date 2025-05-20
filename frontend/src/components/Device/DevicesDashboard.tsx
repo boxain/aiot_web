@@ -6,7 +6,7 @@ import DeviceCard from '@/components/device/DeviceCard';
 import { Device } from "@/components/device/types";
 import getDevicesAPI from '@/api/device/getDevicesAPI';
 import AddDeviceForm from '@/components/device/AddDeviceForm';
-import FirmwareSelection from './FirmwareSelection';
+import FirmwareSelection from '@/components/device/FirmwareSelection';
 
 const DevicesDashboard = () => {
     
@@ -42,18 +42,30 @@ const DevicesDashboard = () => {
 
     }, [])
 
+    /**
+     * Handle add new device submit
+     */
     const handleAddDeviceClick = () => {
         setShowAddDeviceForm(true);
     };
 
+    /**
+     * Close add new device form
+     */
     const handleCloseAddDeviceForm = () => {
         setShowAddDeviceForm(false);
     };
 
+    /**
+     * Switch select device mode for OTA
+     */
     const openSelectDeviceMode = () => {
         setIsSelectDevice(true);
     };
 
+    /**
+     * Cancel selected device for OTA
+     */
     const cancleSelectDeviceMode = () => {
         setIsSelectDevice(false);
         setSelectedDevices([]);
@@ -61,16 +73,24 @@ const DevicesDashboard = () => {
 
     };
 
+    /** 
+     * Return selected device number
+     */
     const checkSelectDeviceLength = () => {
         return selectedDevices.length > 0
     };
 
+
+    /**
+     * Open firmware selection dashboard for OTA
+     */
     const openSelectFirmware = () => {
         setShowSelectFirmware(true);
     };
 
     return (
         <>
+            {/* Button List */}
             <div className='flex items-center gap-x-4  mb-6'>
                 {
                     isSelectDevice ? 
@@ -116,6 +136,7 @@ const DevicesDashboard = () => {
                 }
             </div>
 
+            {/* Device List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {devices.map((device, index) => (
                     <DeviceCard 
@@ -128,6 +149,7 @@ const DevicesDashboard = () => {
                 ))}
             </div>
 
+            {/* Add Device Form */}
             {showAddDeviceForm && (
                 <div className="fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10">
                     {/* AddDeviceForm is now centered within this overlay */}
@@ -135,11 +157,12 @@ const DevicesDashboard = () => {
                 </div>
             )}
 
-            {showSelectFirmware && (
-                <div className="fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10">
-                    <FirmwareSelection />
-                </div>
-            )}
+            {/* Firmware Selection Dashboard */}
+            {/* {showSelectFirmware && (
+                <div className="fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10"> */}
+                    <FirmwareSelection showSelectFirmware={showSelectFirmware} setShowSelectFirmware={setShowSelectFirmware} cancleSelectDeviceMode={cancleSelectDeviceMode} />
+                {/* </div>
+            )} */}
         </>
     )
 }

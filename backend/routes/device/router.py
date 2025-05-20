@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Annotated
 from PIL import Image, ImageDraw
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import FileResponse
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketException, Depends
 
 
@@ -180,6 +181,31 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
     except Exception as e:
         print(traceback.format_exc())
         print("Unknown exception")
+
+
+@router.get("/ota/{user_id}/{firmware_id}")
+async def ota_update(user_id: str, firmware_id: str, db: AsyncSession = Depends(get_db)):
+    firmware_path = "firmware/version_1.bin"
+    return FileResponse(firmware_path)
+
+
+@router.get("/firmware/deployment/{device_id}")
+async def firmware_deployment(device_id: str):
+    message = {
+        "action": "OTA",
+        "download_path": "http://192.168.1.102:8000/api/device/ota/123/123"
+    }
+    await ConnectionManager.send_message_to_device(device_id, message)
+    return {"message": "Device firmware updated"}
+
+
+@router.get("/reset/{device_id}")
+async def reset(device_id: str):
+    message = {
+        "action": "RESET",
+    }
+    await ConnectionManager.send_message_to_device(device_id, message)
+    return {"message": "Device reset"} 
 
 
 @router.get("/continuous_mode/{device_id}")
