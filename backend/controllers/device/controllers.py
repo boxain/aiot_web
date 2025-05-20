@@ -129,6 +129,7 @@ class DeviceController:
             raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
             
         except Exception as e:
+            print(traceback.format_exc())
             await db.rollback()
             raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
 

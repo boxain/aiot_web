@@ -17,7 +17,8 @@ export interface DeviceCardProps {
 }
 
 export interface FirmwareSelectionProps {
-    showSelectFirmware: boolean;
-    setShowSelectFirmware: Dispatch<SetStateAction<boolean>>;
-    cancleSelectDeviceMode: () => void;
+  selectedDevices: string[];
+  showSelectFirmware: boolean;
+  setShowSelectFirmware: Dispatch<SetStateAction<boolean>>;
+  cancleSelectDeviceMode: () => void;
 }

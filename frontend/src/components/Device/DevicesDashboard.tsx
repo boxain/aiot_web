@@ -27,7 +27,6 @@ const DevicesDashboard = () => {
                 
                 if(result.success){
                     setDevices(result.data.devices)
-                    alert("Get devices success")
                 }else{
                     alert("Get devices failed")
                 }
@@ -165,7 +164,12 @@ const DevicesDashboard = () => {
             {/* Firmware Selection Dashboard */}
             {/* {showSelectFirmware && (
                 <div className="fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10"> */}
-                    <FirmwareSelection showSelectFirmware={showSelectFirmware} setShowSelectFirmware={setShowSelectFirmware} cancleSelectDeviceMode={cancleSelectDeviceMode} />
+                    <FirmwareSelection 
+                        selectedDevices={selectedDevices}
+                        showSelectFirmware={showSelectFirmware} 
+                        setShowSelectFirmware={setShowSelectFirmware} 
+                        cancleSelectDeviceMode={cancleSelectDeviceMode} 
+                    />
                 {/* </div>
             )} */}
         </>

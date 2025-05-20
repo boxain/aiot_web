@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, ListRestart } from 'lucide-react';
-import { FirmwareSelectionProps } from '@/components/device/types';
+import { format } from 'date-fns';
+
+import Loading from '../Loading';
 import { Firmware } from '@/components/firmware/types';
+import { FirmwareSelectionProps } from '@/components/device/types';
+import otaAPI from '@/api/device/otaAPI';
+import getFirmwaresAPI from '@/api/firmware/getFirmwaresAPI';
+
 
 
 const FirmwareListItem = ({ firmware, isSelected, onSelect }: { firmware: Firmware; isSelected: boolean; onSelect: (id: string) => void; }) => {
@@ -19,59 +25,44 @@ const FirmwareListItem = ({ firmware, isSelected, onSelect }: { firmware: Firmwa
           <p className="text-sm text-gray-600 mt-1">{firmware.description}</p>
         </div>
         <div className="text-xs text-gray-500 mt-2">
-            Created: {new Date(firmware.createdAt).toLocaleDateString()}
+            Created: {new Date(firmware.created_time).toLocaleDateString()}
         </div>
     </div>
   );
 };
 
-const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ showSelectFirmware, setShowSelectFirmware, cancleSelectDeviceMode }) => {
+const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ selectedDevices, showSelectFirmware, setShowSelectFirmware, cancleSelectDeviceMode }) => {
+    const [firmwares, setFirmwares] = useState<Firmware[]>([]);
+    const [isGetFirmwares, setIsGetFirmwares ] = useState(true);
+    const [isOTAUpdate, setIsOTAUpdate] = useState(false);
     const [selectedFirmwareId, setSelectedFirmwareId] = useState<string | null>(null);
 
-    const firmwares : Firmware[] = [
-        {
-            id: "1",
-            name: "version_01",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        },
-        {
-            id: "2",
-            name: "version_02",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        },
-        {
-            id: "3",
-            name: "version_01",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        },
-        {
-            id: "4",
-            name: "version_02",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        },
-            {
-            id: "5",
-            name: "version_01",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        },
-        {
-            id: "6",
-            name: "version_02",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        }
-    ]
+    useEffect(() => {
 
-    const handleConfirmClick = () => {
-        if (selectedFirmwareId) {
-            console.log("firmware id: ", selectedFirmwareId);
+        const getFirmwares = async () => {
+            try{
+                const result = await getFirmwaresAPI();
+                if(result.success){
+
+                    const formattedFirmwares = result.data.firmwares.map((fm: Firmware) => {
+                        return {
+                            ...fm,
+                            created_time: format(new Date(fm.created_time), 'yyyy/MM/dd HH:mm')
+                        }
+                    })
+
+                    setFirmwares(formattedFirmwares)
+                }else{
+                    alert("Get devices failed")
+                }
+            }finally{
+                setIsGetFirmwares(false);
+            }
         }
-    };
+
+        getFirmwares();
+
+    }, [])
 
     const handleCancelClick = () => {
         setSelectedFirmwareId(null); 
@@ -79,8 +70,26 @@ const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ showSelectFirmwar
         cancleSelectDeviceMode();
     };
 
+    const handleConfirmClick = async () => {
+        if(isOTAUpdate) return;
+        if(!selectedFirmwareId) return;
+
+        try{
+            setIsOTAUpdate(true);
+            const result = await otaAPI(selectedDevices, selectedFirmwareId);
+            if(result.success){
+                alert(result.message);
+                handleCancelClick();
+            }else{
+                alert(result.message);
+            }
+        }finally{
+            setIsOTAUpdate(false);
+        }
+    };
+
     return (
-        <div className={`fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10 ${!showSelectFirmware && "hidden"}`}>
+        <div className={`fixed inset-0 z-10 flex items-center justify-center transition-opacity duration-300 ${showSelectFirmware ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}bg-black/50`} aria-hidden={!showSelectFirmware}>
             <div className={`fixed bottom-0 left-0 right-0 z-20 h-[400px] transition-transform duration-300 ease-in-out ${showSelectFirmware ? "translate-y-0" : "translate-y-full"}`}>
                 <div className="bg-white h-full shadow-2xl rounded-t-xl flex flex-col overflow-hidden">
                     {/* Header with Title and Buttons */}

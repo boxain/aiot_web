@@ -29,7 +29,6 @@ const FirmwareDashboard = () => {
                     })
 
                     setFirmwares(formattedFirmwares)
-                    alert("Get devices success")
                 }else{
                     alert("Get devices failed")
                 }

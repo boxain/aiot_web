@@ -185,19 +185,19 @@ async def ota_update(user_id: str, firmware_id: str, db: AsyncSession = Depends(
 
 @router.post("/firmware/deployment")
 async def firmware_deployment(params: ReqeustScheme.FirmwareDeploymentParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return DeviceController.firmware_deployment(db=db, user_id=current_user.get('user_id', None), device_id=params.device_id, firmware_id=params.firmware_id)
+    return await DeviceController.firmware_deployment(db=db, user_id=current_user.get('user_id', None), device_id=params.device_id, firmware_id=params.firmware_id)
 
 
 @router.get("/reset/{device_id}")
 async def device_reset(device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return DeviceController.reset_device(db=db, user_id=current_user.get('user_id', None), device_id=device_id)
+    return await DeviceController.device_reset(db=db, user_id=current_user.get('user_id', None), device_id=device_id)
 
 
 @router.get("/inference/{device_id}")
 async def model_inference(device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return DeviceController.model_inference(db=db, user_id=current_user.get('user_id', None), device_id=device_id)
+    return await DeviceController.model_inference(db=db, user_id=current_user.get('user_id', None), device_id=device_id)
 
 
 @router.post("/mode_switch/{device_id}")
 async def model_switch(params: ReqeustScheme.ModeSwtichParams, device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return DeviceController.mode_switch(db=db, user_id=current_user.get('user_id', None), device_id=device_id, mode=params.mode)
+    return await DeviceController.mode_switch(db=db, user_id=current_user.get('user_id', None), device_id=device_id, mode=params.mode)
