@@ -4,9 +4,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-import routes.device.request_schema as ReqeustSchema
-import utils.exception as GeneralExc
+
 from models.device_model import Device
+from models.firmware_model import Firmware
+import routes.device.request_schema as ReqeustSchema
+from utils.connection_manage import ConnectionManager
+import utils.exception as GeneralExc
+
 
 class DeviceController:
     
@@ -92,7 +96,119 @@ class DeviceController:
 
 
     @classmethod
-    async def connection(cls, params: ReqeustSchema.ConnectionParams): 
-        # perform ESP-IDF connection
-        print("ssid: ", params.ssid)
-        print("password: ", params.password)
+    async def firmware_deployment(cls, db: AsyncSession, user_id: str, device_id: str, firmware_id: str):
+        try:
+            # Make sure device exist
+            query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+
+            if device is None:
+                print("Dvice not found, raise Error")
+
+            # Make sure firmware exist
+            query = select(Firmware).where(Firmware.id == firmware_id ).where(Firmware.user_id == user_id).where(Firmware.deleted_time == None)
+            result = await db.execute(query)
+            firmware = result.scalar_one_or_none()
+
+            if firmware is None:
+                print("Firmware not found, raise Error")
+
+            
+            # Prepare params for send task to device
+            download_path = f"http://192.168.1.102:8000/api/device/ota/{user_id}/{firmware_id}"
+            await ConnectionManager.active_device_task(device_id=device_id, task="OTA", download_path=download_path)
+
+            return { 
+                "success": True,
+                "message": "Send OTA updated message to device success !"
+            }
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+            
+        except Exception as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+
+
+    @classmethod
+    async def device_reset(cls, db: AsyncSession, user_id: str, device_id: str):
+        try:
+            # Make sure device exist
+            query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+
+            if device is None:
+                print("Dvice not found, raise Error")
+
+            await ConnectionManager.active_device_task(device_id=device_id, task="RESET")
+
+            return { 
+                "success": True,
+                "message": "Send reset task to device success !"
+            }
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+            
+        except Exception as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+        
+
+    @classmethod
+    async def model_inference(cls, db: AsyncSession, user_id: str, device_id: str):
+        try:
+            # Make sure device exist
+            query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+
+            if device is None:
+                print("Dvice not found, raise Error")
+
+            await ConnectionManager.active_device_task(device_id=device_id, task="INFERENCE")
+
+            return { 
+                "success": True,
+                "message": "Send model inference task to device success !"
+            }
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+            
+        except Exception as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+        
+    
+    @classmethod
+    async def mode_switch(cls, db: AsyncSession, user_id: str, device_id: str, mode: str):
+        try:
+            # Make sure device exist
+            query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+
+            if device is None:
+                print("Dvice not found, raise Error")
+
+            await ConnectionManager.active_device_task(device_id=device_id, task="MODE_SWITCH", mode=mode)
+
+            return { 
+                "success": True,
+                "message": f"Send switch {mode} task to device success !"
+            }
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+            
+        except Exception as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))

@@ -11,6 +11,7 @@ async def simple_websocket_client(uri):
             while True:
                 try:
                     incoming_message = await websocket.recv()
+                    print(f"Received message: ", incoming_message)
                     
                 except websockets.exceptions.ConnectionClosedOK:
                     print("Connection cloed by Server.")
@@ -33,5 +34,5 @@ async def simple_websocket_client(uri):
 
 
 if __name__ == "__main__":
-    server_uri="ws://127.0.0.1:8000/api/device/ws/79d25121-7f10-4399-9b1c-a1b16c1e40b1/456"
+    server_uri="ws://127.0.0.1:8000/api/device/ws/6e837227-93b7-461b-bc73-caa9828b7f26/123"
     asyncio.run(simple_websocket_client(server_uri))

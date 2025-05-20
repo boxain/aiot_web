@@ -46,9 +46,8 @@ if __name__ == '__main__':
     uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, workers=1, ws_ping_interval=600, log_level="info")
 
 '''
-1. 完成 firmware route 與 db --- finished
-2. 完成 firmware API 串接
-3. 完成 Switch mode API
-4. 完成 Switch mode API 串接
-\
+1. 完成 OTA API 串接
+2. 完成 Switch mode API
+3. 完成 Switch mode API 串接
+4. 完成 Device 狀態動態顯示
 '''

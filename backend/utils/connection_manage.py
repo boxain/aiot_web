@@ -66,3 +66,12 @@ class ConnectionManager:
                 await websocket_connection.send_bytes(message)
         else:
             print(f"Websocket connection doen't exist for user_id: {user_id}")  
+
+
+    @classmethod
+    async def active_device_task(cls, device_id: str, task: str, **kwargs):
+        message = {
+            "action": task,
+            **kwargs
+        }
+        await cls.send_message_to_device(device_id, message)

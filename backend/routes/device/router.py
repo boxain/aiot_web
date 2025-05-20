@@ -16,7 +16,6 @@ import routes.device.request_schema as ReqeustScheme
 from controllers.device.controllers import DeviceController
 from controllers.user.controllers import UserController
 from utils.connection_manage import ConnectionManager
-from models.user_model import User
 
 
 router = APIRouter()
@@ -34,11 +33,6 @@ async def get_devices(db: AsyncSession = Depends(get_db), current_user = Depends
 @router.get("/{device_id}")
 async def get_device_with_id(device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
     return await DeviceController.get_device_with_deviceId(db=db, device_id=device_id)
-
-
-@router.post("/connection")
-async def connection(params: ReqeustScheme.ConnectionParams, current_user = Depends(UserController.get_current_user)):
-    return await DeviceController.connection(params=params)
 
 
 async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue: asyncio.Queue, user_id:str, device_id: str, manager: ConnectionManager):
@@ -182,56 +176,28 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
         print(traceback.format_exc())
         print("Unknown exception")
 
-
+# 換到 firmware route
 @router.get("/ota/{user_id}/{firmware_id}")
 async def ota_update(user_id: str, firmware_id: str, db: AsyncSession = Depends(get_db)):
     firmware_path = "firmware/version_1.bin"
     return FileResponse(firmware_path)
 
 
-@router.get("/firmware/deployment/{device_id}")
-async def firmware_deployment(device_id: str):
-    message = {
-        "action": "OTA",
-        "download_path": "http://192.168.1.102:8000/api/device/ota/123/123"
-    }
-    await ConnectionManager.send_message_to_device(device_id, message)
-    return {"message": "Device firmware updated"}
+@router.post("/firmware/deployment")
+async def firmware_deployment(params: ReqeustScheme.FirmwareDeploymentParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return DeviceController.firmware_deployment(db=db, user_id=current_user.get('user_id', None), device_id=params.device_id, firmware_id=params.firmware_id)
 
 
 @router.get("/reset/{device_id}")
-async def reset(device_id: str):
-    message = {
-        "action": "RESET",
-    }
-    await ConnectionManager.send_message_to_device(device_id, message)
-    return {"message": "Device reset"} 
-
-
-@router.get("/continuous_mode/{device_id}")
-async def start_inference(device_id: str):
-    message = {
-        "action": "MODE_SWITCH",
-        "mode": "CONTINUOUS_MODE"
-    }
-    await ConnectionManager.send_message_to_device(device_id, message)
-    return {"message": "Device switched to continuous mode"}
-
-
-@router.get("/stand_by_mode/{device_id}")
-async def stop_inference(device_id: str):
-    message = {
-        "action": "MODE_SWITCH",
-        "mode": "STAND_BY_MODE"
-    }
-    await ConnectionManager.send_message_to_device(device_id, message)
-    return {"message": "Device switched to stand by mode"}
+async def device_reset(device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return DeviceController.reset_device(db=db, user_id=current_user.get('user_id', None), device_id=device_id)
 
 
 @router.get("/inference/{device_id}")
-async def stop_inference(device_id: str):
-    message = {
-        "action": "INFERENCE",
-    }
-    await ConnectionManager.send_message_to_device(device_id, message)
-    return {"message": "Device switched to stand by mode"}
+async def model_inference(device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return DeviceController.model_inference(db=db, user_id=current_user.get('user_id', None), device_id=device_id)
+
+
+@router.post("/mode_switch/{device_id}")
+async def model_switch(params: ReqeustScheme.ModeSwtichParams, device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return DeviceController.mode_switch(db=db, user_id=current_user.get('user_id', None), device_id=device_id, mode=params.mode)
