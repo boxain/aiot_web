@@ -1,11 +1,25 @@
-import React from 'react';
+import { useState } from 'react';
 import { FirmwareProps } from '@/components/firmware/types';
 import { Trash2 } from 'lucide-react';
+import deleteFirmwaresAPI from '@/api/firmware/deleteFirmwareAPI';
 
-const FirmwareCard = ({ firmware } : FirmwareProps) => {
+const FirmwareCard = ({ firmware, setFirmwares } : FirmwareProps) => {
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleDeleteClick = (id: string) => {
-    console.log("Delete id: ", id);
+  const handleDeleteClick = async (id: string) => {
+    if(isLoading)return;
+    try{
+      setIsLoading(true);
+      const result = await deleteFirmwaresAPI(id);
+      if(result.success){
+        alert("Delete firmware success !");
+        setFirmwares((prev) => prev.filter((fm => fm.id !== id)))
+      }else{
+        alert("Delete firmware failed....");
+      }
+    }finally{
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -16,7 +30,7 @@ const FirmwareCard = ({ firmware } : FirmwareProps) => {
           <h3 className="text-lg font-semibold text-gray-800 mb-1">{firmware.name}</h3>
 
           {/* Creation Date */}
-          <p className="text-sm text-gray-600 mb-2">Created: {firmware.createdAt}</p>
+          <p className="text-sm text-gray-600 mb-2">Created: {firmware.created_time}</p>
 
           {/* Description */}
           <p className="text-gray-700 text-sm">{firmware.description}</p>

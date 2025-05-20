@@ -1,57 +1,47 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+
 import FirmwareCard from '@/components/firmware/FirmwareCard';
+import Loading from '@/components/Loading';
 import { Firmware } from '@/components/firmware/types';
 import AddFirmwareForm from '@/components/firmware/AddFirmwareForm';
-import getDevicesAPI from '@/api/device/getDevicesAPI';
+import getFirmwaresAPI from '@/api/firmware/getFirmwaresAPI';
 
 const FirmwareDashboard = () => {
-    
-    // const [firmwares, setFirmwares] = useState<Firmware[]>([]);
-    // const [isGetFirmwares, setIsGetFirmwares ] = useState(false);
+    const [firmwares, setFirmwares] = useState<Firmware[]>([]);
+    const [isGetFirmwares, setIsGetFirmwares ] = useState(true);
     const [showAddFirmwareForm, setShowAddFirmwareForm] = useState(false);
     
-    // useEffect(() => {
+    useEffect(() => {
 
-    //     const getDevices = async () => {
-    //         if(isGetDevices)return;
-    //         try{
-    //             setIsGetDevices(true);
-    //             const result = await getDevicesAPI();
-                
-    //             if(result.success){
-    //                 setDevices(result.data.devices)
-    //                 alert("Get devices success")
-    //             }else{
-    //                 alert("Get devices failed")
-    //             }
+        const getFirmwares = async () => {
+            try{
+                const result = await getFirmwaresAPI();
+                if(result.success){
 
-    //         }finally{
-    //             setIsGetDevices(false);
-    //         }
-    //     }
+                    const formattedFirmwares = result.data.firmwares.map((fm: Firmware) => {
+                        return {
+                            ...fm,
+                            created_time: format(new Date(fm.created_time), 'yyyy/MM/dd HH:mm')
+                        }
+                    })
 
-    //     getDevices();
-
-    // }, [])
-    
-    const firmwares = [
-        {
-            id: "1",
-            name: "version_01",
-            createdAt: "2024/12/31",
-            description: "Bref description"
-        },
-        {
-            id: "2",
-            name: "version_02",
-            createdAt: "2024/12/31",
-            description: "Bref description"
+                    setFirmwares(formattedFirmwares)
+                    alert("Get devices success")
+                }else{
+                    alert("Get devices failed")
+                }
+            }finally{
+                setIsGetFirmwares(false);
+            }
         }
-    ]
 
+        getFirmwares();
 
+    }, [])
+    
     const handleAddFirmwareClick = () => {
         setShowAddFirmwareForm(true);
     };
@@ -59,6 +49,11 @@ const FirmwareDashboard = () => {
     const handleCloseAddFimrwareForm = () => {
         setShowAddFirmwareForm(false);
     };
+    
+
+    if(isGetFirmwares){
+        return <Loading />
+    }
     
     return (
         <>
@@ -70,14 +65,19 @@ const FirmwareDashboard = () => {
             </button>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {firmwares.map((firmware) => (
-                    <FirmwareCard firmware={firmware} key={firmware.id} />
-                ))}
+                {
+                    firmwares && firmwares.length > 0 &&
+                    (   
+                        firmwares.map((firmware) => (
+                            <FirmwareCard firmware={firmware} setFirmwares={setFirmwares}  key={firmware.id} />
+                        ))
+                    )
+                }
             </div>
 
             {showAddFirmwareForm && (
                 <div className="fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10">
-                    <AddFirmwareForm onClose={handleCloseAddFimrwareForm} />
+                    <AddFirmwareForm onClose={handleCloseAddFimrwareForm} setFirmwares={setFirmwares} />
                 </div>
             )}
         </>

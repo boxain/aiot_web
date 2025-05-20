@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { X } from 'lucide-react';
+import { AddFirmwareFormProps } from '@/components/firmware/types';
+import uploadFirmwaresAPI from '@/api/firmware/uploadFirmwareAPI';
 
 
-interface AddFirmwareFormProps {
-  onClose: () => void;
-}
-
-// AddFirmwareForm component
-const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose }) => {
+const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose, setFirmwares }) => {
   const [firmwareName, setFirmwareName] = useState('');
   const [description, setDescription] = useState('');
   const [firmwareFile, setFirmwareFile] = useState<File | null>(null); 
@@ -21,49 +18,32 @@ const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose }) => {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    // Simple validation
+  const handleSubmit = async () => {
     if (!firmwareName || !firmwareFile) {
       alert('Please provide firmware name and file.');
       return;
     }
 
-    // Optional: If you have an onSubmit prop to handle the actual upload
-    // setIsLoading(true);
-    // const formData = new FormData();
-    // formData.append('name', firmwareName);
-    // formData.append('description', description);
-    // formData.append('file', firmwareFile);
+    setIsLoading(true);
+    try{
+      const result = await uploadFirmwaresAPI(firmwareFile, firmwareName, description);
+      if(result.success){
 
-    // try {
-    //   await onSubmit(formData); // Call the parent's submit handler
-    //   // Clear form and close modal on success
-    //   setFirmwareName('');
-    //   setDescription('');
-    //   setFirmwareFile(null);
-    //   onClose();
-    // } catch (error) {
-    //   console.error('Firmware upload failed:', error);
-    //   alert('Failed to upload firmware.');
-    // } finally {
-    //   setIsLoading(false);
-    // }
+        // Clean all state
+        setFirmwareName('');
+        setDescription('');
+        setFirmwareFile(null);
+        // Close form
+        onClose();
+        // Update firmwares list
+        setFirmwares((prev) => [...prev, result.data.firmwares[0]])
 
-    // --- For demonstration purposes ---
-    console.log('Submitting Firmware:');
-    console.log('Name:', firmwareName);
-    console.log('Description:', description);
-    console.log('File:', firmwareFile);
-    // Simulate successful submission and close
-    alert('Firmware data logged to console (replace with actual upload logic)');
-    // Clear form and close modal
-    setFirmwareName('');
-    setDescription('');
-    setFirmwareFile(null);
-    // Call onClose prop received from parent
-    // onClose(); // Uncomment this when you integrate it
+      }else{
+        alert("Upload failed");
+      }
+    }finally{
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -83,7 +63,7 @@ const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose }) => {
 
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Add New Firmware</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           {/* Firmware Name Input */}
           <div>
             <label htmlFor="firmwareName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -139,14 +119,14 @@ const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose }) => {
               className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
                 isLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
               }`}
+              onClick={handleSubmit}
               disabled={isLoading}
             >
               {isLoading ? 'Uploading...' : 'Upload Firmware'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
-
   );
 };
 

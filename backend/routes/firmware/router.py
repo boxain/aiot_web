@@ -11,7 +11,7 @@ from controllers.user.controllers import UserController
 
 router = APIRouter()
 
-@router.post("/")
+@router.post("")
 async def create_firmware(
     file: UploadFile = File(...),
     name: str = Form(...),
@@ -22,7 +22,7 @@ async def create_firmware(
     return await FirmwareController.create_firmware(db=db, user_id=current_user.get("user_id", None), file=file, name=name, description=description)
 
 
-@router.get("/")
+@router.get("")
 async def get_firmwares(db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
     return await FirmwareController.get_firmwares(db=db, user_id=current_user.get("user_id", None))
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import DeviceCard from '@/components/device/DeviceCard';
+import Loading from '@/components/Loading';
 import { Device } from "@/components/device/types";
 import getDevicesAPI from '@/api/device/getDevicesAPI';
 import AddDeviceForm from '@/components/device/AddDeviceForm';
@@ -11,7 +12,7 @@ import FirmwareSelection from '@/components/device/FirmwareSelection';
 const DevicesDashboard = () => {
     
     const [devices, setDevices] = useState<Device[]>([]);
-    const [isGetDevices, setIsGetDevices ] = useState(false);
+    const [isGetDevices, setIsGetDevices ] = useState(true);
     const [showAddDeviceForm, setShowAddDeviceForm] = useState(false);
     const [isSelectDevice, setIsSelectDevice] = useState(false);
     const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
@@ -20,10 +21,8 @@ const DevicesDashboard = () => {
 
     useEffect(() => {
 
-        const getDevices = async () => {
-            if(isGetDevices)return;
+        const getDevices = async () => {         
             try{
-                setIsGetDevices(true);
                 const result = await getDevicesAPI();
                 
                 if(result.success){
@@ -87,6 +86,12 @@ const DevicesDashboard = () => {
     const openSelectFirmware = () => {
         setShowSelectFirmware(true);
     };
+
+
+    if(isGetDevices){
+        return <Loading />
+    }
+
 
     return (
         <>

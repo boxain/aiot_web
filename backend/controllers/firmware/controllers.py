@@ -1,3 +1,4 @@
+import os
 import traceback
 from datetime import datetime
 from fastapi import UploadFile
@@ -14,23 +15,33 @@ class FirmwareController:
     @classmethod
     async def create_firmware(cls, db: AsyncSession , file: UploadFile,  user_id: str, name: str, description: str):
         try:
+            directory = f"{ConfigManage.STORAGE_PATH}/{user_id}/"
+            os.makedirs(directory, exist_ok=True)
 
-            location = f"{ConfigManage.STORAGE_PATH}/{user_id}/{name}"
+            location = f"{directory}{name}"
             with open(location, "wb") as f:
                 f.write(await file.read())
             
             firmware = Firmware(name=name, description=description, user_id=user_id)
             db.add(firmware)
             await db.commit()
-            await db.refresh()
-            return firmware
+            await db.refresh(firmware)
+            return { 
+                "success": True,
+                "data": {
+                    "firmwares": [firmware]
+                },
+                "message": "Upload firmware sucessfully."
+            }
 
         except SQLAlchemyError as e:
-            db.rollback()
+            print(traceback.format_exc())
+            await db.rollback()
             raise GeneralExc.DatabaseError(message="Create firmware failed.", details=str(e))
         
         except Exception as e:
-            db.rollback()
+            print(traceback.format_exc())
+            await db.rollback()
             raise GeneralExc.UnknownError(message="Create firmware failed.", details=str(e))
         
 
@@ -40,7 +51,7 @@ class FirmwareController:
 
             query = select(Firmware).where(Firmware.deleted_time == None).where(Firmware.user_id == user_id)
             result = await db.execute(query)
-            firmwares = result.all()
+            firmwares = result.scalars().all()
 
             return { 
                 "success": True,
