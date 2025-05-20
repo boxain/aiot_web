@@ -4,12 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, ListRestart } from 'lucide-react';
 import { format } from 'date-fns';
 
-import Loading from '../Loading';
 import { Firmware } from '@/components/firmware/types';
 import { FirmwareSelectionProps } from '@/components/device/types';
 import otaAPI from '@/api/device/otaAPI';
 import getFirmwaresAPI from '@/api/firmware/getFirmwaresAPI';
-
 
 
 const FirmwareListItem = ({ firmware, isSelected, onSelect }: { firmware: Firmware; isSelected: boolean; onSelect: (id: string) => void; }) => {
@@ -89,8 +87,8 @@ const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ selectedDevices, 
     };
 
     return (
-        <div className={`fixed inset-0 z-10 flex items-center justify-center transition-opacity duration-300 ${showSelectFirmware ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}bg-black/50`} aria-hidden={!showSelectFirmware}>
-            <div className={`fixed bottom-0 left-0 right-0 z-20 h-[400px] transition-transform duration-300 ease-in-out ${showSelectFirmware ? "translate-y-0" : "translate-y-full"}`}>
+        <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
+            <div className={`fixed bottom-0 left-0 right-0 z-20 h-[400px] transition-transform duration-500 ease-in-out ${showSelectFirmware ? "translate-y-0" : "translate-y-full"}`}>
                 <div className="bg-white h-full shadow-2xl rounded-t-xl flex flex-col overflow-hidden">
                     {/* Header with Title and Buttons */}
                     <div className="flex justify-between items-center p-4 border-b border-gray-200">

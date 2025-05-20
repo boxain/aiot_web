@@ -49,7 +49,6 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
                     name: result.data.username,
                     email: result.data.email
                 });
-                router.push("/");
             }else{
                 router.push("/user/login")
             }

@@ -162,16 +162,14 @@ const DevicesDashboard = () => {
             )}
 
             {/* Firmware Selection Dashboard */}
-            {/* {showSelectFirmware && (
-                <div className="fixed inset-0 bg-black/50 transition-opacity duration-300 flex items-center justify-center z-10"> */}
-                    <FirmwareSelection 
-                        selectedDevices={selectedDevices}
-                        showSelectFirmware={showSelectFirmware} 
-                        setShowSelectFirmware={setShowSelectFirmware} 
-                        cancleSelectDeviceMode={cancleSelectDeviceMode} 
-                    />
-                {/* </div>
-            )} */}
+            {showSelectFirmware && (
+                <FirmwareSelection 
+                    selectedDevices={selectedDevices}
+                    showSelectFirmware={showSelectFirmware} 
+                    setShowSelectFirmware={setShowSelectFirmware} 
+                    cancleSelectDeviceMode={cancleSelectDeviceMode} 
+                />
+            )}         
         </>
     )
 }
