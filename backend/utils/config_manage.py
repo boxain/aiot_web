@@ -15,10 +15,12 @@ class ConfigManage:
     SERVER_PORT=os.getenv("SERVER_PORT")
     SERVER_ADDRESS=os.getenv("SERVER_ADDRESS")
 
+    # Local Storage Config
+    STORAGE_PATH=os.getenv("STORAGE_PATH")
+
     # Frontend Config
     FRONTEND_HOST=os.getenv("FRONTEND_HOST")
     FRONTEND_PORT=os.getenv("FRONTEND_PORT")
-
 
     # Authentication Config
     SECRET_KEY=os.getenv("SECRET_KEY")

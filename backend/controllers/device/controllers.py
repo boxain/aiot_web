@@ -11,7 +11,7 @@ from models.device_model import Device
 class DeviceController:
     
     @classmethod
-    async def create_device(cls, db: AsyncSession, mac: str):
+    async def create_device(cls, db: AsyncSession, user_id: str, mac: str):
         try:
 
             query = select(Device.id).where(Device.mac == mac)
@@ -26,6 +26,7 @@ class DeviceController:
                 "name": f"Device_{timestamp}",
                 "mac": mac,
                 "description": "",
+                "user_id": user_id
             }
 
             device = Device(**device_dict)

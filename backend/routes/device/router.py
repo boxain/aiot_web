@@ -145,7 +145,7 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
     binary_queue = asyncio.Queue(maxsize=50)
     
     try:
-        device_id = await DeviceController.create_device(db=db, mac=mac)
+        device_id = await DeviceController.create_device(db=db, user_id=user_id, mac=mac)
 
         await websocket.accept()
         await ConnectionManager.connect_device(device_id=device_id, websocket=websocket)
