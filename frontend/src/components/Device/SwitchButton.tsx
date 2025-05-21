@@ -1,0 +1,58 @@
+import { PowerCircle, Clock } from "lucide-react";
+import { SwitchButtonProps } from "@/components/device/types";
+import switchModeAPI from "@/api/device/switchModeAPI";
+
+const SwitchButton: React.FC<SwitchButtonProps> = ({ id, activeMode, setActiveMode, isSwitchMode, setIsSwitchMode }) => {
+
+    const handleModeSwitch = async (mode: string) => {
+        if(isSwitchMode || activeMode === mode) return; // Prevent switching if already in mode or switch is in progress
+        setIsSwitchMode(true);
+        try{
+            const result = await switchModeAPI(id, mode);
+            if(result.success){
+                setActiveMode(mode);
+            }else{
+                alert("Switch Mode Failed");
+            }
+        } finally{
+            setIsSwitchMode(false);
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            {/* Stand By Mode Button */}
+            <button
+                onClick={() => handleModeSwitch('STAND_BY_MODE')}
+                disabled={isSwitchMode}
+                className={`flex flex-col items-center justify-center p-5 rounded-lg border-2 transition-all duration-200 ease-in-out transform hover:scale-105
+                ${activeMode === 'STAND_BY_MODE' 
+                    ? 'border-green-500 bg-green-50 text-green-700 shadow-md' 
+                    : 'border-gray-300 bg-gray-50 hover:border-green-300 hover:bg-green-50 text-gray-600 hover:text-green-600'
+                } ${isSwitchMode ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+            >
+                <Clock className={`w-10 h-10 mb-2 transition-colors ${activeMode === 'STAND_BY_MODE' ? 'text-green-600' : 'text-gray-500'}`} />
+                <span className="text-base font-medium">Stand By Mode</span>
+            </button>
+
+            {/* Continuous Mode Button */}
+            <button
+                onClick={() => handleModeSwitch('CONTINUOUS_MODE')}
+                disabled={isSwitchMode}
+                className={`flex flex-col items-center justify-center p-5 rounded-lg border-2 transition-all duration-200 ease-in-out transform hover:scale-105
+                ${activeMode === 'CONTINUOUS_MODE' 
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md' 
+                    : 'border-gray-300 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600'
+                } ${isSwitchMode ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+            >
+                <PowerCircle className={`w-10 h-10 mb-2 transition-colors ${activeMode === 'CONTINUOUS_MODE' ? 'text-indigo-600' : 'text-gray-500'}`} />
+                <span className="text-base font-medium">Continuous Mode</span>
+            </button>
+              
+        </div>
+    )
+}
+
+export default SwitchButton

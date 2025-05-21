@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 
-const resetDeviceAPI = async (device_id: string, mode: string) => {
+const resetDeviceAPI = async (device_id: string) => {
     try{
 
         const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/device/reset/${device_id}`;

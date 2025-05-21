@@ -22,3 +22,21 @@ export interface FirmwareSelectionProps {
   setShowSelectFirmware: Dispatch<SetStateAction<boolean>>;
   cancleSelectDeviceMode: () => void;
 }
+
+export interface DeviceInfoProps {
+  device: Device
+}
+
+export interface SwitchButtonProps {
+  id: string;
+  activeMode: string;
+  setActiveMode: Dispatch<SetStateAction<string>>;
+  isSwitchMode: boolean;
+  setIsSwitchMode: Dispatch<SetStateAction<boolean>>;
+}
+
+export interface ResetButtonProps {
+  id: string;
+  isResetDevice: boolean;
+  setIsResetDevice: Dispatch<SetStateAction<boolean>>;
+}
