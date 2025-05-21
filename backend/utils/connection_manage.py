@@ -9,10 +9,8 @@ class ConnectionManager:
     @classmethod
     async def connect_device(cls, user_id: str, device_id: str, websocket: WebSocket):
         if(device_id in cls.active_devices):
-            old_connected: WebSocket = cls.active_devices.get(device_id)
-            await old_connected.close()
             del cls.active_devices[device_id]
-            print(f"Delete existed device websocket connection, user_id: {device_id}")
+            print(f"Removed existed device websocket connection due to new connection for device_id: {device_id}")
         cls.active_devices[device_id] = websocket
         print(f"Created websocket device connection, device_id: {device_id}")
         await cls.active_frontend_task(user_id=user_id, task="CONNECTED", type="text", device_id=device_id)
@@ -21,9 +19,8 @@ class ConnectionManager:
     @classmethod
     async def disconnect_device(cls, user_id: str, device_id: str):
         if(device_id in cls.active_devices):
-            old_connected: WebSocket = cls.active_devices.get(device_id)
-            await old_connected.close()
             del cls.active_devices[device_id]
+            print(f"Cleaned up device websocket connection for device_id: {device_id}")
         print(f"Delete existed device websocket connection, device_id: {device_id}")
         await cls.active_frontend_task(user_id=user_id, task="DISCONNECTED", type="text", device_id=device_id)
 
@@ -40,10 +37,8 @@ class ConnectionManager:
     @classmethod    
     async def connect_frontend(cls, user_id: str, websocket: WebSocket):
         if(user_id in cls.active_frontends):
-            old_connected: WebSocket = cls.active_frontends.get(user_id)
-            await old_connected.close()
             del cls.active_frontends[user_id]
-            print(f"Delete existed frontend websocket connection, user_id: {user_id}")
+            print(f"Removed existed frontend websocket connection due to new connection for user_id: {user_id}")
         cls.active_frontends[user_id] = websocket
         print(f"Created websocket frontend connection, user_id: {user_id}")
         
@@ -51,9 +46,8 @@ class ConnectionManager:
     @classmethod
     async def disconnect_frontend(cls, user_id: str):
         if(user_id in cls.active_frontends):
-            old_connected: WebSocket = cls.active_frontends.get(user_id)
-            await old_connected.close()
             del cls.active_frontends[user_id]
+            print(f"Cleaned up frontend websocket connection for user_id: {user_id}")
         print(f"Delete existed frontend websocket connection, user_id: {user_id}")
 
 

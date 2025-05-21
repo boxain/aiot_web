@@ -8,6 +8,7 @@ from typing import Annotated
 from PIL import Image, ImageDraw
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import FileResponse
+from starlette.websockets import WebSocketState 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketException, Depends
 
 
@@ -41,7 +42,7 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
             text_mes = await text_queue.get()
             
             if text_mes is None:
-                print(f"Server received termination signal from {device_id}")
+                break
                  
             data = json.loads(text_mes)
             print("Received data: ", data)
@@ -118,35 +119,35 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                             await ConnectionManager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=image_bytes_with_boxes)
 
 
-                
         except json.JSONDecodeError:
             print(traceback.format_exc())
-            print(e)
         
 
         except asyncio.CancelledError:
             print(traceback.format_exc())
-            print(e)
+            
         
-        except Exception as e:
+        except Exception:
             print(traceback.format_exc())
-            print(e)
 
 
 @router.websocket("/ws/{user_id}/{mac}")
 async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: AsyncSession = Depends(get_db)):
     text_queue = asyncio.Queue(maxsize=50)
     binary_queue = asyncio.Queue(maxsize=50)
-    
+    process_task = None
+
     try:
         device_id = await DeviceController.create_device(db=db, user_id=user_id, mac=mac)
 
         await websocket.accept()
         await ConnectionManager.connect_device(user_id=user_id , device_id=device_id, websocket=websocket)
-        asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, user_id, device_id, ConnectionManager))
+        process_task = asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, user_id, device_id, ConnectionManager))
 
         while True:
-            
+            if websocket.client_state != WebSocketState.DISCONNECTED or websocket.application_state != WebSocketState.DISCONNECTED:
+                break
+
             data = await websocket.receive()
             if "text" in data:
 
@@ -167,15 +168,39 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
     except WebSocketDisconnect:
         print("Websocket disconnected")
         await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
+        if process_task and not process_task.done():
+            process_task.cancel()
+            try:
+                await process_task
+            except asyncio.CancelledError:
+                pass
+            await text_queue.put(None) 
+
     
     except WebSocketException:
         print("Websocket exception")
         await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
+        if process_task and not process_task.done():
+            process_task.cancel()
+            try:
+                await process_task
+            except asyncio.CancelledError:
+                pass
+            await text_queue.put(None) 
+
 
     except Exception as e:
         print(traceback.format_exc())
         print("Unknown exception")
         await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
+        if process_task and not process_task.done():
+            process_task.cancel()
+            try:
+                await process_task
+            except asyncio.CancelledError:
+                pass
+            await text_queue.put(None) 
+
 
 
 # 換到 firmware route
