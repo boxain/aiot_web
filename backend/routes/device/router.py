@@ -142,7 +142,7 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
         device_id = await DeviceController.create_device(db=db, user_id=user_id, mac=mac)
 
         await websocket.accept()
-        await ConnectionManager.connect_device(device_id=device_id, websocket=websocket)
+        await ConnectionManager.connect_device(user_id=user_id , device_id=device_id, websocket=websocket)
         asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, user_id, device_id, ConnectionManager))
 
         while True:
@@ -166,15 +166,17 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
 
     except WebSocketDisconnect:
         print("Websocket disconnected")
-        await ConnectionManager.disconnect_device(device_id=device_id)
+        await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
     
     except WebSocketException:
         print("Websocket exception")
-        await ConnectionManager.disconnect_device(device_id=device_id)
+        await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
 
     except Exception as e:
         print(traceback.format_exc())
         print("Unknown exception")
+        await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
+
 
 # 換到 firmware route
 @router.get("/ota/{user_id}/{firmware_id}")

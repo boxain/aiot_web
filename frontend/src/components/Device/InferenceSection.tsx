@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react"
 import { useWs } from '@/context/WebSocketContext';
 import { ImageIcon } from "lucide-react";
+import { InferenceSectionProps } from "@/components/device/types";
 
-const InferenceSection = () => {
+const InferenceSection: React.FC<InferenceSectionProps> = ({ activeMode, isInference, setIsInference }) => {
     const { lastBinaryData } = useWs();
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [lastInferenceText, setLastInferenceText] = useState<string>("Waiting for inference data..."); // For inference text
@@ -43,17 +44,27 @@ const InferenceSection = () => {
     return (
         <> 
             <div className="w-full aspect-video flex items-center justify-center bg-gray-200 rounded-lg text-gray-500 overflow-hidden">
-            {imageUrl ? (
-                <img src={imageUrl} alt="Live Inference Feed" className="w-full h-full object-cover" />
-            ) : (
-                <div className="text-center">
-                <ImageIcon className="w-16 h-16 mx-auto text-gray-400 mb-2" />
-                </div>
-            )}
+                {imageUrl ? (
+                    <img src={imageUrl} alt="Live Inference Feed" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="text-center">
+                    <ImageIcon className="w-16 h-16 mx-auto text-gray-400 mb-2" />
+                    </div>
+                )}
             </div>
             <p className="text-sm text-gray-600 font-medium text-center py-2 bg-gray-50 rounded-md">{lastInferenceText}</p>
+            <button className={`w-full py-4 px-2 text-base font-medium text-center rounded-lg border-2 transition-all duration-200 ease-in-out transform
+                ${activeMode === "STAND_BY_MODE" ? "hover:scale-105 border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-600 cursor-pointer":
+                    "border-gray-300 bg-gray-50 cursor-not-allowed"
+                }    
+            `}>
+                Live Inference
+            </button>
         </>
     )
 }
 
 export default InferenceSection
+
+
+// 

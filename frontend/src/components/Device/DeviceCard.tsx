@@ -22,11 +22,11 @@ const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } :
 
   const statusCSSColor = () => {
     switch (device.status) {
-        case "Connected":
+        case "connected":
             return "bg-green-500"
-        case "Disconnected":
+        case "disconnected":
             return "bg-red-500"
-        case "Busy":
+        case "busy":
             return "bg-orange-500"
         default:
             return "bg-purple-500"

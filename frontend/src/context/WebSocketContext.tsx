@@ -1,20 +1,25 @@
-import { useState, useEffect, useRef, useContext, createContext, ReactNode } from "react";
+import { useState, useEffect, useRef, useContext, createContext, ReactNode, Dispatch, SetStateAction } from "react";
 import { useAuth } from "./AuthContext";
 
 
 interface WebSocketContextType {
     isConnected: boolean;
     status: string;
-    sendMessage: (message: string) => void;
-    lastMessage: string | null;
+    stateQueue: ConnectionStateType[];
+    setStateQueue: Dispatch<SetStateAction<ConnectionStateType[]>>; 
     lastBinaryData: Blob | null;
+}
+
+interface ConnectionStateType {
+    action: string;
+    device_id: string;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
     isConnected: false,
     status:"disconnected",
-    sendMessage: (message: string) => {},
-    lastMessage: null,
+    stateQueue: [],
+    setStateQueue: () => {},
     lastBinaryData: null
 })
 
@@ -26,7 +31,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
     const { user } = useAuth();
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [status, setStatus] = useState<string>("disconnected");
-    const [lastMessage, setLastMessage] = useState<string>("");
+    const [stateQueue, setStateQueue] = useState<ConnectionStateType[]>([]);
     const [lastBinaryData, setLastBinaryData] = useState<Blob | null>(null);
     
 
@@ -54,7 +59,21 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
             websocket.onmessage = (event) => {
                 if (isMounted.current){
                     if(typeof event.data === "string") {
-                        console.log("Received JSON sting");
+                        try{
+                            const data = JSON.parse(event.data)
+                            if(data.action === "CONNECTED"){
+                                console.log("connected device: ", data.device_id);
+                                setStateQueue(prev => [...prev, data]);
+                            }else if(data.action === "DISCONNECTED"){
+                                console.log("disconnected device: ", data.device_id);
+                                setStateQueue(prev => [...prev, data])
+                            }else{
+                                console.error("Invalid websocket message...");
+                            }
+                        }catch(error){
+                            console.error("Failed to parse JSON: ", error);
+                        }
+
                     }else if(event.data instanceof Blob || event.data instanceof ArrayBuffer){
                         console.log("Received Binary Data");
                         
@@ -98,13 +117,8 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
     }, [user])
 
 
-    const sendMessage = (message: string) => {
-
-    }
-
-
     return (
-        <WebSocketContext.Provider value={{isConnected, status, sendMessage, lastMessage, lastBinaryData}}>
+        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, lastBinaryData}}>
             {children}
         </WebSocketContext.Provider>
     )

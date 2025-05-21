@@ -24,6 +24,7 @@ const DeviceDetail = () => {
   const [isGetDevice, setIsGetDevice ] = useState<boolean>(true);
   const [isResetDevice, setIsResetDevice ] = useState<boolean>(false);
   const [isSwitchMode, setIsSwitchMode ] = useState<boolean>(false);
+  const [isInference, setIsInference ] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -101,7 +102,7 @@ const DeviceDetail = () => {
               <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
                 Real-time Inference
               </h2>
-              <InferenceSection />
+              <InferenceSection activeMode={activeMode} isInference={isInference} setIsInference={setIsInference} />
             </div>
 
             {/* Mode Switching & Restart Controls */}

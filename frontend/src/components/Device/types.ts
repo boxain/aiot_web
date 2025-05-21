@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction } from "react";
 
 export interface Device {
-  status: "Connected" | "Disconnected" | "Busy";
+  status: "connected" | "disconnected" | "busy";
   id: string;
   name: string;
   mac: string;
@@ -39,4 +39,10 @@ export interface ResetButtonProps {
   id: string;
   isResetDevice: boolean;
   setIsResetDevice: Dispatch<SetStateAction<boolean>>;
+}
+
+export interface InferenceSectionProps {
+  activeMode: string;
+  isInference: boolean;
+  setIsInference: Dispatch<SetStateAction<boolean>>;
 }

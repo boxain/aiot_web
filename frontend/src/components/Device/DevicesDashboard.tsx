@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+
+import { useWs } from '@/context/WebSocketContext';
 import DeviceCard from '@/components/device/DeviceCard';
 import Loading from '@/components/Loading';
 import { Device } from "@/components/device/types";
@@ -10,7 +12,7 @@ import AddDeviceForm from '@/components/device/AddDeviceForm';
 import FirmwareSelection from '@/components/device/FirmwareSelection';
 
 const DevicesDashboard = () => {
-    
+    const { stateQueue, setStateQueue } = useWs();
     const [devices, setDevices] = useState<Device[]>([]);
     const [isGetDevices, setIsGetDevices ] = useState(true);
     const [showAddDeviceForm, setShowAddDeviceForm] = useState(false);
@@ -39,6 +41,33 @@ const DevicesDashboard = () => {
         getDevices();
 
     }, [])
+
+
+    useEffect(() => {
+        if (!stateQueue.length) return;
+        const message = stateQueue[0];
+
+        if (message.action === "CONNECTED") {
+            setDevices(prev =>
+                prev.map(device =>
+                    device.id === message.device_id
+                        ? { ...device, status: "connected" }
+                        : device
+                )
+            );
+        } else if (message.action === "DISCONNECTED") {
+            setDevices(prev =>
+                prev.map(device =>
+                    device.id === message.device_id
+                        ? { ...device, status: "disconnected" }
+                        : device
+                )
+            );
+        }
+
+        setStateQueue(prev => prev.slice(1));
+    }, [stateQueue])
+
 
     /**
      * Handle add new device submit

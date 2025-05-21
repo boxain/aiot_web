@@ -25,7 +25,7 @@ const SwitchButton: React.FC<SwitchButtonProps> = ({ id, activeMode, setActiveMo
             <button
                 onClick={() => handleModeSwitch('STAND_BY_MODE')}
                 disabled={isSwitchMode}
-                className={`flex flex-col items-center justify-center p-5 rounded-lg border-2 transition-all duration-200 ease-in-out transform hover:scale-105
+                className={`flex flex-col items-center justify-center p-5 rounded-lg border-2 transition-all duration-200 ease-in-out cursor-pointer transform hover:scale-105
                 ${activeMode === 'STAND_BY_MODE' 
                     ? 'border-green-500 bg-green-50 text-green-700 shadow-md' 
                     : 'border-gray-300 bg-gray-50 hover:border-green-300 hover:bg-green-50 text-gray-600 hover:text-green-600'
@@ -40,7 +40,7 @@ const SwitchButton: React.FC<SwitchButtonProps> = ({ id, activeMode, setActiveMo
             <button
                 onClick={() => handleModeSwitch('CONTINUOUS_MODE')}
                 disabled={isSwitchMode}
-                className={`flex flex-col items-center justify-center p-5 rounded-lg border-2 transition-all duration-200 ease-in-out transform hover:scale-105
+                className={`flex flex-col items-center justify-center p-5 rounded-lg border-2 transition-all duration-200 ease-in-out cursor-pointer transform hover:scale-105
                 ${activeMode === 'CONTINUOUS_MODE' 
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md' 
                     : 'border-gray-300 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600'

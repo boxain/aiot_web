@@ -7,7 +7,7 @@ class ConnectionManager:
 
 
     @classmethod
-    async def connect_device(cls, device_id: str, websocket: WebSocket):
+    async def connect_device(cls, user_id: str, device_id: str, websocket: WebSocket):
         if(device_id in cls.active_devices):
             old_connected: WebSocket = cls.active_devices.get(device_id)
             await old_connected.close()
@@ -15,15 +15,17 @@ class ConnectionManager:
             print(f"Delete existed device websocket connection, user_id: {device_id}")
         cls.active_devices[device_id] = websocket
         print(f"Created websocket device connection, device_id: {device_id}")
-        
+        await cls.active_frontend_task(user_id=user_id, task="CONNECTED", type="text", device_id=device_id)
+
 
     @classmethod
-    async def disconnect_device(cls, device_id: str):
+    async def disconnect_device(cls, user_id: str, device_id: str):
         if(device_id in cls.active_devices):
             old_connected: WebSocket = cls.active_devices.get(device_id)
             await old_connected.close()
             del cls.active_devices[device_id]
         print(f"Delete existed device websocket connection, device_id: {device_id}")
+        await cls.active_frontend_task(user_id=user_id, task="DISCONNECTED", type="text", device_id=device_id)
 
 
     @classmethod
@@ -75,3 +77,12 @@ class ConnectionManager:
             **kwargs
         }
         await cls.send_message_to_device(device_id, message)
+
+    
+    @classmethod
+    async def active_frontend_task(cls, user_id: str, task: str, type: str, **kwargs):
+        message = {
+            "action": task,
+            **kwargs
+        }
+        await cls.send_message_to_frontend(user_id, type, message)
