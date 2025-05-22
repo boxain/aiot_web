@@ -62,11 +62,39 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                         try{
                             const data = JSON.parse(event.data)
                             if(data.action === "CONNECTED"){
+
                                 console.log("connected device: ", data.device_id);
                                 setStateQueue(prev => [...prev, data]);
+
                             }else if(data.action === "DISCONNECTED"){
+
                                 console.log("disconnected device: ", data.device_id);
                                 setStateQueue(prev => [...prev, data])
+
+                            }else if(data.action === "OTA"){
+
+                                const { device_id, status } = data;
+                                console.log(`OTA status: ${status} for device: ${device_id}`);
+                                if(status === "RECEIVED"){
+                                    setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
+                                }else if(status === "COMPLETED"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                }else if(status === "ERROR"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                }
+
+                            }else if(data.action === "MODE_SWITCH"){
+
+                                const { device_id, status } = data;
+                                console.log(`MODE_SWITCH status: ${status} for device: ${device_id}`);
+                                if(status === "RECEIVED"){
+                                    setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
+                                }else if(status === "COMPLETED"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                }else if(status === "ERROR"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                }
+
                             }else{
                                 console.error("Invalid websocket message...");
                             }
@@ -103,6 +131,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                     console.log('WebSocket Disconnected:');
                 }
             }
+
         }else{
             console.log("Does not login...");
         }

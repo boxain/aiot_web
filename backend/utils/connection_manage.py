@@ -39,6 +39,15 @@ class ConnectionManager:
 
 
     @classmethod
+    def set_device_connection_state(cls, device_id: str, connection_state: str):
+        if(device_id in cls.active_devices):
+            cls.active_devices.get(device_id)["connection_state"] = connection_state
+            return device_id
+        else:
+            return None
+
+
+    @classmethod
     async def send_message_to_device(cls, device_id: str, message: str):
         if(device_id in cls.active_devices):
             websocket_connection: WebSocket = cls.active_devices.get(device_id).get("websocket")

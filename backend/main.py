@@ -46,10 +46,9 @@ if __name__ == '__main__':
     uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="info")
 
 '''
-1. 獲取 Device List 時獲取 connection state --- finished
-2. 新增 busy 狀態 --- processing
-3. 前端 busy 狀態防呆 --- processing
-4. Device mode 儲存
-5. 頁面美化
-6. 首頁更新
+1. 前端 busy 狀態防呆
+2. Device mode 儲存
+3. Notification
+4. 頁面美化
+5. 首頁更新
 '''

@@ -58,7 +58,6 @@ class DeviceController:
 
             for dev in devices:
                 connection_state = ConnectionManager.get_device_connection_state(device_id=str(dev.id))
-                print(f"connection_state {connection_state} for device: {dev.name}")
                 if connection_state:
                     dev.status = connection_state
                 else:

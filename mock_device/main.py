@@ -1,6 +1,25 @@
+import json
 import asyncio
 import websockets
-import sys
+
+
+async def OTA_task(status: str, delay: int):
+    print(f'OTA - status: {status}, delay: {delay}')
+    await asyncio.sleep(delay=delay)
+    return {
+        "action": "OTA",
+        "status": status,
+    }
+
+
+async def mode_switch_task(status: str, delay: int):
+    print(f'MODE SWITCH - status: {status}, delay: {delay}')
+    await asyncio.sleep(delay=delay)
+    return {
+        "action": "MODE_SWITCH",
+        "status": status,
+    }
+
 
 async def simple_websocket_client(uri):
     try:
@@ -9,20 +28,36 @@ async def simple_websocket_client(uri):
             print(f"Connection create {uri}")
 
             while True:
+                message = await websocket.recv()
                 try:
-                    incoming_message = await websocket.recv()
-                    print(f"Received message: ", incoming_message)
-                    
-                except websockets.exceptions.ConnectionClosedOK:
-                    print("Connection cloed by Server.")
-                    break
-                except websockets.exceptions.ConnectionClosedError as e:
-                    print(f"Connection closed by Error: {e}")
-                    break
-                except Exception as e:
-                    print(f"Unkown error: {e}")
-                    break
+                    data = json.loads(message)
+                    action = data.get("action")
 
+                    if action == "OTA":
+                        print("="*30)
+                        print("Start OTA")
+                        response = await OTA_task(status="RECEIVED", delay=3)
+                        await websocket.send(json.dumps(response))
+                        response = await OTA_task(status="COMPLETED", delay=5)
+                        await websocket.send(json.dumps(response))
+                        print("End OTA")
+                        print("="*30)
+
+                    elif action == "MODE_SWITCH":
+                        print("="*30)
+                        print("Start MODE_SWITCH")
+                        response = await mode_switch_task(status="RECEIVED", delay=3)
+                        await websocket.send(json.dumps(response))
+                        response = await mode_switch_task(status="COMPLETED", delay=5)
+                        await websocket.send(json.dumps(response))
+                        print("End MODE_SWITCH")
+                        print("="*30)
+
+                    else:
+                        print(f"Unknown action received: {action}")
+
+                except json.JSONDecodeError:
+                    print("Invalid JSON received from server")
 
     except ConnectionRefusedError:
         print(f"Connection refuse: {uri}")
@@ -34,5 +69,26 @@ async def simple_websocket_client(uri):
 
 
 if __name__ == "__main__":
-    server_uri="ws://127.0.0.1:8000/api/device/ws/6e837227-93b7-461b-bc73-caa9828b7f26/123"
+    protocal = input("Enter protocal(ws or wss): ").strip()
+    while not protocal:
+        protocal = "ws"
+    
+    domain = input("Enter domain: ").strip()
+    while not domain:
+        domain = "127.0.0.1"
+
+    port = input("Enter port: ").strip()
+    while not port:
+        port = "8000"  
+
+    user_id = input("Enter user_id: ").strip()
+    while not user_id:
+        user_id = "6e837227-93b7-461b-bc73-caa9828b7f26"
+        
+    mac_id = input("Enter mac_id: ").strip()
+    while not mac_id:
+        mac_id = "123"
+
+    server_uri=f"{protocal}://{domain}:{port}/api/device/ws/{user_id}/{mac_id}"
+    
     asyncio.run(simple_websocket_client(server_uri))

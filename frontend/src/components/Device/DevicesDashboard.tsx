@@ -63,6 +63,14 @@ const DevicesDashboard = () => {
                         : device
                 )
             );
+        } else if (message.action === "BUSY") {
+            setDevices(prev =>
+                prev.map(device =>
+                    device.id === message.device_id
+                        ? { ...device, status: "busy" }
+                        : device
+                )
+            );
         }
 
         setStateQueue(prev => prev.slice(1));
