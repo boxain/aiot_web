@@ -39,7 +39,7 @@ const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } :
         {/* Device status */}
         <div className='flex items-center justify-between'>
           <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block mb-2 ${statusCSSColor()}`}>
-            {device.status || "Developed"}
+            {device.status}
           </div>
           { isSelectDevice && 
             <input 

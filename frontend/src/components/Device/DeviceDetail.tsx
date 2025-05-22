@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle } from "lucide-react";
 
 import { Device } from './types'; 
+import { useWs } from '@/context/WebSocketContext';
 import Loading from '@/components/Loading'; 
 import DeviceInfo from '@/components/device/DeviceInfo';
 import DeviceLog from '@/components/device/DeviceLog';
@@ -18,7 +19,8 @@ import getDeviceAPI from '@/api/device/getDeviceAPI';
 const DeviceDetail = () => {
   const param = useParams<{id:string}>();
   const id = param.id;
-
+  
+  const { stateQueue, setStateQueue } = useWs();
   const [activeMode, setActiveMode] = useState('STAND_BY_MODE');
   const [device, setDevice] = useState<Device | null>(null);
   const [isGetDevice, setIsGetDevice ] = useState<boolean>(true);
@@ -57,6 +59,37 @@ const DeviceDetail = () => {
   }, [id])
 
 
+  useEffect(() => {
+      if (!stateQueue.length) return;
+      const message = stateQueue[0];
+
+      if(message.device_id !== id) return;
+      if (message.action === "CONNECTED") {
+        setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
+      } else if (message.action === "DISCONNECTED") {
+        setDevice(prev => prev ? { ...prev, status: "disconnected" } : prev);
+      } else if (message.action === "BUSY") {
+        setDevice(prev => prev ? { ...prev, status: "busy" } : prev);
+      }
+
+      setStateQueue(prev => prev.slice(1));
+  }, [stateQueue])
+
+
+  const statusCSSColor = () => {
+    switch (device!.status) {
+        case "connected":
+            return "bg-green-500"
+        case "disconnected":
+            return "bg-red-500"
+        case "busy":
+            return "bg-orange-500"
+        default:
+            return "bg-purple-500"
+    }
+  }
+
+
   if (isGetDevice) {
     return <Loading />;
   }
@@ -78,9 +111,14 @@ const DeviceDetail = () => {
 
         {/* Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Device: <span className="text-indigo-600">{device?.name}</span>
-          </h1>
+          <div className='flex items-center gap-x-2'>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Device: <span className="text-indigo-600">{device?.name}</span>
+            </h1>
+            <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block ${statusCSSColor()}`}>
+              {device.status}
+            </div>
+          </div>
           <p className="text-gray-500 mt-1">Manage and monitor your device in real-time.</p>
         </div>
 

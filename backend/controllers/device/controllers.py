@@ -84,6 +84,12 @@ class DeviceController:
             query = select(Device).where(Device.id == device_id)
             result = await db.execute(query)
             device = result.scalar_one_or_none()
+
+            connection_state = ConnectionManager.get_device_connection_state(device_id=str(device.id))
+            if connection_state:
+                device.status = connection_state
+            else:
+                device.status = "disconnected"
             
             return { 
                 "success": True,
