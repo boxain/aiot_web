@@ -11,7 +11,11 @@ class ConnectionManager:
         if(device_id in cls.active_devices):
             del cls.active_devices[device_id]
             print(f"Removed existed device websocket connection due to new connection for device_id: {device_id}")
-        cls.active_devices[device_id] = websocket
+        cls.active_devices[device_id] = {
+            "websocket": websocket,
+            "connection_state": "connected"
+        }
+        print(f"active devices: {cls.active_devices[device_id]}")
         print(f"Created websocket device connection, device_id: {device_id}")
         await cls.active_frontend_task(user_id=user_id, task="CONNECTED", type="text", device_id=device_id)
 
@@ -26,9 +30,18 @@ class ConnectionManager:
 
 
     @classmethod
+    def get_device_connection_state(cls, device_id: str):
+        if(device_id in cls.active_devices):
+            connection_state = cls.active_devices.get(device_id).get("connection_state")
+            return connection_state
+        else:
+            return None
+
+
+    @classmethod
     async def send_message_to_device(cls, device_id: str, message: str):
         if(device_id in cls.active_devices):
-            websocket_connection: WebSocket = cls.active_devices[device_id]
+            websocket_connection: WebSocket = cls.active_devices.get(device_id).get("websocket")
             await websocket_connection.send_json(message)
         else:
             print(f"Websocket connection doen't exist for device_id: {device_id}")  

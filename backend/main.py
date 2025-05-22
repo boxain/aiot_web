@@ -43,9 +43,13 @@ app.include_router(firmware_router, prefix="/api/firmware", tags=["firmware"])
 
 if __name__ == '__main__':
     # https://myapollo.com.tw/blog/begin-to-asyncio/#google_vignette
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, workers=1, ws_ping_interval=600, log_level="info")
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="info")
 
 '''
-1. 完成 Device 狀態動態顯示
-2. 完成 Device task 前端邏輯渲染
+1. 獲取 Device List 時獲取 connection state --- finished
+2. 新增 busy 狀態 --- processing
+3. 前端 busy 狀態防呆 --- processing
+4. Device mode 儲存
+5. 頁面美化
+6. 首頁更新
 '''

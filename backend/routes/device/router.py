@@ -124,7 +124,7 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
         
 
         except asyncio.CancelledError:
-            print(traceback.format_exc())
+            pass
             
         
         except Exception:
@@ -136,6 +136,7 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
     text_queue = asyncio.Queue(maxsize=50)
     binary_queue = asyncio.Queue(maxsize=50)
     process_task = None
+    device_id = None
 
     try:
         device_id = await DeviceController.create_device(db=db, user_id=user_id, mac=mac)
@@ -145,9 +146,6 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
         process_task = asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, user_id, device_id, ConnectionManager))
 
         while True:
-            if websocket.client_state != WebSocketState.DISCONNECTED or websocket.application_state != WebSocketState.DISCONNECTED:
-                break
-
             data = await websocket.receive()
             if "text" in data:
 
@@ -163,44 +161,61 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
                 except asyncio.TimeoutError:
                      print(f"Queue put timed out for bytes message from {device_id}. Queue might be full.")
 
+            if websocket.client_state != WebSocketState.DISCONNECTED or websocket.application_state != WebSocketState.DISCONNECTED:
+                break
             
 
     except WebSocketDisconnect:
-        print("Websocket disconnected")
-        await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
-        if process_task and not process_task.done():
-            process_task.cancel()
-            try:
-                await process_task
-            except asyncio.CancelledError:
-                pass
-            await text_queue.put(None) 
-
-    
-    except WebSocketException:
-        print("Websocket exception")
-        await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
-        if process_task and not process_task.done():
-            process_task.cancel()
-            try:
-                await process_task
-            except asyncio.CancelledError:
-                pass
-            await text_queue.put(None) 
-
+        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
+        print(f"[{log_id}] WebSocket disconnected by client.")
 
     except Exception as e:
+        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
+        print(f"[{log_id}] An unexpected error occurred in websocket_init: {type(e).__name__} - {e}")
         print(traceback.format_exc())
-        print("Unknown exception")
-        await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
+        # Attempt to close the WebSocket gracefully if it's not already closed by the exception.
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            try:
+                await websocket.close(code=1011)
+            except RuntimeError as re: # e.g., "Cannot call 'close' once a close message has been sent."
+                print(f"[{log_id}] Error trying to close websocket during exception handling: {re}")
+            except Exception as close_ex:
+                 print(f"[{log_id}] Further exception during websocket.close() in error handler: {close_ex}")
+
+    finally:
+        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
+        print(f"[{log_id}] Cleaning up resources for WebSocket connection...")
+
+        if device_id:
+            await ConnectionManager.disconnect_device(user_id=user_id, device_id=device_id)
+
+        # 1. Signal the processing task to shut down by putting None in queues.
+        if text_queue: # Check if initialized
+            try:
+                text_queue.put_nowait(None)
+                print(f"[{log_id}] Sent None to text_queue for task shutdown.")
+            except asyncio.QueueFull:
+                print(f"[{log_id}] Text queue full when trying to send None. Task might be stuck or already exited.")
+            except Exception as qe_text:
+                print(f"[{log_id}] Error putting None to text_queue: {qe_text}")
+
+        # 2. Cancel the task and wait for it to finish.
         if process_task and not process_task.done():
+            print(f"[{log_id}] Cancelling process_task...")
             process_task.cancel()
             try:
-                await process_task
+                await asyncio.wait_for(process_task, timeout=5.0) # Wait for task to finish
+                print(f"[{log_id}] process_task joined after cancellation signal.")
             except asyncio.CancelledError:
-                pass
-            await text_queue.put(None) 
-
+                print(f"[{log_id}] process_task was cancelled and handled cancellation.")
+            except asyncio.TimeoutError:
+                print(f"[{log_id}] Timeout waiting for process_task to finish after cancellation.")
+            except Exception as e_task:
+                print(f"[{log_id}] Exception while awaiting cancelled process_task: {e_task}")
+        elif process_task and process_task.done():
+            print(f"[{log_id}] process_task was already done.")
+        
+        print(f"[{log_id}] WebSocket cleanup complete.")
 
 
 # 換到 firmware route
