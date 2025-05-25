@@ -42,6 +42,7 @@ export interface ResetButtonProps {
 }
 
 export interface InferenceSectionProps {
+  device_id: string;
   activeMode: string;
   isInference: boolean;
   setIsInference: Dispatch<SetStateAction<boolean>>;

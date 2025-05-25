@@ -103,20 +103,18 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                             print(f"Server received wrong inference serial from {device_id}")
                             continue
 
-                        await manager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=binary_mes)
-                        
                         content = data.get("content", None)
-                        if content and "bounding_boxes" in content:
+                        if content is None or "bounding_boxes" not in content:
+                            await manager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=binary_mes)
+
+                        elif content and "bounding_boxes" in content:
                     
                             bounding_boxes = content.get("bounding_boxes")
                             if not isinstance(bounding_boxes, list):
                                 print(f"{device_id} Error: bounding_boxes is not a list.")
                             
                             
-
                             print(f"{device_id} Processing image...")
-
-
                             image_stream = io.BytesIO(binary_mes)
                             image = Image.open(image_stream)
                             if image.mode != "RGB":
@@ -138,7 +136,7 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                             image.save(output_stream, format="JPEG")
                             image_bytes_with_boxes = output_stream.getvalue()
 
-                            await ConnectionManager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=image_bytes_with_boxes)
+                            await manager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=image_bytes_with_boxes)
 
 
         except json.JSONDecodeError:

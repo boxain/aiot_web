@@ -140,7 +140,7 @@ const DeviceDetail = () => {
               <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
                 Real-time Inference
               </h2>
-              <InferenceSection activeMode={activeMode} isInference={isInference} setIsInference={setIsInference} />
+              <InferenceSection device_id={id} activeMode={activeMode} isInference={isInference} setIsInference={setIsInference} />
             </div>
 
             {/* Mode Switching & Restart Controls */}

@@ -1,3 +1,4 @@
+import os
 import json
 import asyncio
 import websockets
@@ -21,6 +22,20 @@ async def mode_switch_task(status: str, delay: int):
     }
 
 
+async def inference_task(delay: int):
+    print(f'INFERENCE - delay: {delay}')
+    await asyncio.sleep(delay=delay)
+    image_path = os.path.join(os.path.dirname(__file__), "images", "image_1.png")
+    with open(image_path, "rb") as f:
+        image_bytes = f.read()
+
+    text_response = {
+        "action": "INFERENCE_RESULT",
+        "status": "COMPLETED"
+    }
+    return text_response, image_bytes
+
+
 async def simple_websocket_client(uri):
     try:
       
@@ -35,22 +50,31 @@ async def simple_websocket_client(uri):
 
                     if action == "OTA":
                         print("="*30)
-                        print("Start OTA")
+                        print("Start OTA Task")
                         response = await OTA_task(status="RECEIVED", delay=3)
                         await websocket.send(json.dumps(response))
                         response = await OTA_task(status="COMPLETED", delay=5)
                         await websocket.send(json.dumps(response))
-                        print("End OTA")
+                        print("End OTA Task")
                         print("="*30)
 
                     elif action == "MODE_SWITCH":
                         print("="*30)
-                        print("Start MODE_SWITCH")
+                        print("Start MODE_SWITCH Task")
                         response = await mode_switch_task(status="RECEIVED", delay=3)
                         await websocket.send(json.dumps(response))
                         response = await mode_switch_task(status="COMPLETED", delay=5)
                         await websocket.send(json.dumps(response))
-                        print("End MODE_SWITCH")
+                        print("End MODE_SWITCH Task")
+                        print("="*30)
+
+                    elif action == "INFERENCE":
+                        print("="*30)
+                        print("Start INFERENCE Task")
+                        text_response, bytes_response = await inference_task(delay=2)
+                        await websocket.send(message=bytes_response)
+                        await websocket.send(message=json.dumps(text_response))
+                        print("End INFERENCE Task")
                         print("="*30)
 
                     else:

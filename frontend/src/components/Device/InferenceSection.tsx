@@ -2,12 +2,12 @@ import { useState, useEffect } from "react"
 import { useWs } from '@/context/WebSocketContext';
 import { ImageIcon } from "lucide-react";
 import { InferenceSectionProps } from "@/components/device/types";
+import inferenceAPI from "@/api/device/inferenceAPI";
 
-const InferenceSection: React.FC<InferenceSectionProps> = ({ activeMode, isInference, setIsInference }) => {
+const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, activeMode, isInference, setIsInference }) => {
     const { lastBinaryData } = useWs();
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [lastInferenceText, setLastInferenceText] = useState<string>("Waiting for inference data..."); // For inference text
-    
     
     useEffect(() => {
         let currentImageUrl = imageUrl; // Store current URL to properly revoke it later
@@ -38,7 +38,22 @@ const InferenceSection: React.FC<InferenceSectionProps> = ({ activeMode, isInfer
     // Re-instating a similar pattern but ensuring it's correct:
     // The current setup is mostly fine; the key is that `imageUrl` in the return function
     // captures the `imageUrl` from the scope of that `useEffect` run.
-    }, [lastBinaryData]); // Only re-run when lastBinaryData changes
+    }, [lastBinaryData]);
+
+
+    const handleLiveInference = async () => {
+        if(isInference) return;
+        setIsInference(true);
+        try{
+            const result = await inferenceAPI(device_id);
+            if(!result.success){
+                alert("Inference Failed"); 
+                console.error("Reset failed:", result.message);
+            }
+        } finally {
+            setIsInference(false);
+        }
+    };
 
 
     return (
@@ -53,11 +68,12 @@ const InferenceSection: React.FC<InferenceSectionProps> = ({ activeMode, isInfer
                 )}
             </div>
             <p className="text-sm text-gray-600 font-medium text-center py-2 bg-gray-50 rounded-md">{lastInferenceText}</p>
-            <button className={`w-full py-4 px-2 text-base font-medium text-center rounded-lg border-2 transition-all duration-200 ease-in-out transform
+            <button 
+                className={`w-full py-4 px-2 text-base font-medium text-center rounded-lg border-2 transition-all duration-200 ease-in-out transform
                 ${activeMode === "STAND_BY_MODE" ? "hover:scale-105 border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-600 cursor-pointer":
-                    "border-gray-300 bg-gray-50 cursor-not-allowed"
-                }    
-            `}>
+                    "border-gray-300 bg-gray-50 cursor-not-allowed"}`}
+                onClick={handleLiveInference}
+            >
                 Live Inference
             </button>
         </>
@@ -65,6 +81,3 @@ const InferenceSection: React.FC<InferenceSectionProps> = ({ activeMode, isInfer
 }
 
 export default InferenceSection
-
-
-// 

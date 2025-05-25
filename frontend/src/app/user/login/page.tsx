@@ -21,7 +21,6 @@ export default function Login() {
             setIsSignIn(true);
             const result = await loginAPI(userName, password);
             if(result.success){
-                alert("Login success");
                 const { access_token, token_type, data } = result;
                 const { user_id, username, email } = data;
                 login(user_id, username, email, access_token, token_type);
