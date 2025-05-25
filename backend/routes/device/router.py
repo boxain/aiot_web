@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import base64
 import traceback
 import asyncio
 from datetime import datetime
@@ -105,7 +106,15 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
 
                         content = data.get("content", None)
                         if content is None or "bounding_boxes" not in content:
-                            await manager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=binary_mes)
+                            print("INFERENCE_RESULT:", device_id)
+                            encoded_image = base64.b64encode(binary_mes).decode("utf-8")
+                            sending_message = {
+                                "action": "INFERENCE_RESULT",
+                                "device_id": device_id,
+                                "image_data": encoded_image
+                            }
+
+                            await manager.send_message_to_frontend(user_id=user_id, message_type="text", message=sending_message)
 
                         elif content and "bounding_boxes" in content:
                     
@@ -135,8 +144,14 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                             output_stream = io.BytesIO()
                             image.save(output_stream, format="JPEG")
                             image_bytes_with_boxes = output_stream.getvalue()
+                            encoded_image = base64.b64encode(image_bytes_with_boxes).decode("utf-8")
+                            sending_message = {
+                                "action": "INFERENCE_RESULT",
+                                "device_id": device_id,
+                                "image_data": encoded_image
+                            }
 
-                            await manager.send_message_to_frontend(user_id=user_id, message_type="bytes", message=image_bytes_with_boxes)
+                            await manager.send_message_to_frontend(user_id=user_id, message_type="text", message=sending_message)
 
 
         except json.JSONDecodeError:

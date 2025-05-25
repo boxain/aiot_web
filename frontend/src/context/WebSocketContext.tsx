@@ -7,7 +7,8 @@ interface WebSocketContextType {
     status: string;
     stateQueue: ConnectionStateType[];
     setStateQueue: Dispatch<SetStateAction<ConnectionStateType[]>>; 
-    lastBinaryData: Blob | null;
+    deviceImages: Record<string, Blob[]>;
+    setDeviceImages: Dispatch<SetStateAction<Record<string, Blob[]>>>;
 }
 
 interface ConnectionStateType {
@@ -20,19 +21,26 @@ const WebSocketContext = createContext<WebSocketContextType>({
     status:"disconnected",
     stateQueue: [],
     setStateQueue: () => {},
-    lastBinaryData: null
+    deviceImages: {},
+    setDeviceImages: () => {}
 })
+
+
+const base64ToBlob = async (base64Str: string, type: string = "image/jpeg") => {
+    const res = await fetch(`data:${type};base64,${base64Str}`);
+    return res.blob();
+}
 
 export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) => {
     
+    const MAX_BUFFER_SIZE = 100;
     const ws = useRef<WebSocket | null>(null);
     const isMounted = useRef(true);
-    
     const { user } = useAuth();
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [status, setStatus] = useState<string>("disconnected");
     const [stateQueue, setStateQueue] = useState<ConnectionStateType[]>([]);
-    const [lastBinaryData, setLastBinaryData] = useState<Blob | null>(null);
+    const [deviceImages, setDeviceImages] = useState<Record<string, Blob[]>>({});
     
 
     useEffect(() => {
@@ -56,7 +64,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                 }
             }
     
-            websocket.onmessage = (event) => {
+            websocket.onmessage = async (event) => {
                 if (isMounted.current){
                     if(typeof event.data === "string") {
                         try{
@@ -95,6 +103,29 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                                     setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
                                 }
 
+                            }else if(data.action === "INFERENCE_RESULT"){
+                                
+                                const { device_id, image_data } = data;
+                                console.log("INFERENECE_RESULT: ", device_id);
+                                
+                                try{
+                                    const imageBlob = await base64ToBlob(image_data);
+                                    setDeviceImages((prev) => {
+                                        const existingImages = prev[device_id] || [];
+                                        const updatedImages = [...existingImages, imageBlob]
+                                        if (updatedImages.length > MAX_BUFFER_SIZE){
+                                            updatedImages.shift();
+                                        }
+                                        return {
+                                            ...prev,
+                                            [device_id]: updatedImages
+                                        }
+                                    });
+
+                                }catch(e){
+                                    console.error("Error converting Base64 to Blob:", e);
+                                }
+                            
                             }else{
                                 console.error("Invalid websocket message...");
                             }
@@ -102,17 +133,18 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                             console.error("Failed to parse JSON: ", error);
                         }
 
-                    }else if(event.data instanceof Blob || event.data instanceof ArrayBuffer){
-                        console.log("Received Binary Data");
-                        
-                        let binaryBlob: Blob;
-                        if (event.data instanceof ArrayBuffer){
-                            binaryBlob = new Blob([event.data]);
-                        }else {
-                            binaryBlob = event.data;
-                        }
-                        setLastBinaryData(binaryBlob);
                     }
+                    // else if(event.data instanceof Blob || event.data instanceof ArrayBuffer){
+                    //     console.log("Received Binary Data");
+                        
+                    //     let binaryBlob: Blob;
+                    //     if (event.data instanceof ArrayBuffer){
+                    //         binaryBlob = new Blob([event.data]);
+                    //     }else {
+                    //         binaryBlob = event.data;
+                    //     }
+                    //     setLastBinaryData(binaryBlob);
+                    // }
                 }
             }
     
@@ -147,7 +179,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
 
     return (
-        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, lastBinaryData}}>
+        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, deviceImages, setDeviceImages}}>
             {children}
         </WebSocketContext.Provider>
     )

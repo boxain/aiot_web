@@ -79,7 +79,7 @@ class ConnectionManager:
             if message_type == "text":
                 websocket_connection: WebSocket = cls.active_frontends[user_id]
                 await websocket_connection.send_json(message)
-            elif message_type == "bytes":
+            elif message_type == "byte":
                 websocket_connection: WebSocket = cls.active_frontends[user_id]
                 await websocket_connection.send_bytes(message)
         else:

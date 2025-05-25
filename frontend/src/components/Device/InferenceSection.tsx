@@ -5,40 +5,40 @@ import { InferenceSectionProps } from "@/components/device/types";
 import inferenceAPI from "@/api/device/inferenceAPI";
 
 const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, activeMode, isInference, setIsInference }) => {
-    const { lastBinaryData } = useWs();
+    const { deviceImages, setDeviceImages } = useWs();
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [lastInferenceText, setLastInferenceText] = useState<string>("Waiting for inference data..."); // For inference text
     
     useEffect(() => {
-        let currentImageUrl = imageUrl; // Store current URL to properly revoke it later
+        if(!deviceImages[device_id] || deviceImages[device_id].length == 0){
+            return
+        }
 
-        if (lastBinaryData instanceof Blob) { // Check if it's a Blob
-            const newUrl = URL.createObjectURL(lastBinaryData);
+        let currentImageUrl = imageUrl; 
+        const imageData = deviceImages[device_id][0];
+
+        if (imageData instanceof Blob) { // Check if it's a Blob
+            const newUrl = URL.createObjectURL(imageData);
             setImageUrl(newUrl);
             if (currentImageUrl) {
                 URL.revokeObjectURL(currentImageUrl);
             }
-        } else if (typeof lastBinaryData === 'string') {
-            // If you also get text updates via the same WebSocket connection for inference results
-            setLastInferenceText(lastBinaryData);
         }
 
+        setDeviceImages((prev)=> {
+            const existedDeviceImages = prev[device_id].slice(1);
+            return {
+                ...prev,
+                [device_id]: existedDeviceImages
+            }
+        })
 
-        // Cleanup function: revoke the last URL when the component unmounts or before the next image is set.
         return () => {
-            if (imageUrl) { // This will refer to the imageUrl state at the time of cleanup
+            if (imageUrl) { 
                 URL.revokeObjectURL(imageUrl);
-                // console.log("Revoked Blob URL on cleanup:", imageUrl);
             }
         };
-    // IMPORTANT: If imageUrl is in the dependency array, it might cause frequent revoking/creating.
-    // The cleanup should revoke the *specific* URL created in *this* effect instance.
-    // Let's refine the cleanup. The current `imageUrl` in the cleanup refers to the one from the previous render.
-    // The `oldImageUrl` pattern was actually better for immediate revocation.
-    // Re-instating a similar pattern but ensuring it's correct:
-    // The current setup is mostly fine; the key is that `imageUrl` in the return function
-    // captures the `imageUrl` from the scope of that `useEffect` run.
-    }, [lastBinaryData]);
+    }, [deviceImages]);
 
 
     const handleLiveInference = async () => {
