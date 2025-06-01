@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from routes.user.router import router as user_router
 from routes.device.router import router as device_router
 from routes.firmware.router import router as firmware_router
+from routes.model.router import router as model_router
 from utils.sql_manage import init_db, clean_db
 from middlewares.global_error_handler import global_exc_handler
 
@@ -39,11 +40,12 @@ app.add_middleware(
 app.include_router(user_router, prefix="/api/user", tags=["users"])
 app.include_router(device_router, prefix="/api/device", tags=["device"])
 app.include_router(firmware_router, prefix="/api/firmware", tags=["firmware"])
+app.include_router(model_router, prefix="/api/model", tags=["model"])
 
 
 if __name__ == '__main__':
     # https://myapollo.com.tw/blog/begin-to-asyncio/#google_vignette
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="info")
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="debug")
 
 '''
 1. 前端 busy 狀態防呆

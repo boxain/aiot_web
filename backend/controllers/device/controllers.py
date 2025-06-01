@@ -226,3 +226,58 @@ class DeviceController:
         except Exception as e:
             await db.rollback()
             raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+        
+
+    @classmethod
+    async def model_download(cls, db: AsyncSession, user_id: str, device_id: str, model_id: str):
+        try:
+            # Make sure device exist
+            query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+
+            if device is None:
+                print("Dvice not found, raise Error")
+
+            download_path = f"http://192.168.1.103:8000/api/model/download/{user_id}/{model_id}"
+            await ConnectionManager.active_device_task(device_id=device_id, task="MODEL_DOWNLOAD", model_id=model_id, download_path=download_path)
+
+            return { 
+                "success": True,
+                "message": "Send model inference task to device success !"
+            }
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+            
+        except Exception as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+        
+
+    @classmethod
+    async def model_switch(cls, db: AsyncSession, user_id: str, device_id: str, model_id: str):
+        try:
+            # Make sure device exist
+            query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+
+            if device is None:
+                print("Dvice not found, raise Error")
+
+            await ConnectionManager.active_device_task(device_id=device_id, task="MODEL_SWITCH", model_id=model_id)
+
+            return { 
+                "success": True,
+                "message": "Send model inference task to device success !"
+            }
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+            
+        except Exception as e:
+            await db.rollback()
+            raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))

@@ -38,6 +38,7 @@ async def get_device_with_id(device_id: str, db: AsyncSession = Depends(get_db),
 
 
 async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue: asyncio.Queue, db: AsyncSession, user_id:str, device_id: str, manager: ConnectionManager):
+    # update database when received "completed"
     while True:
         try:
             text_mes = await text_queue.get()
@@ -105,7 +106,7 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                             continue
 
                         content = data.get("content", None)
-                        if content is None or "bounding_boxes" not in content:
+                        if content is None or "inference_results" not in content:
                             print("INFERENCE_RESULT:", device_id)
                             encoded_image = base64.b64encode(binary_mes).decode("utf-8")
                             sending_message = {
@@ -116,11 +117,11 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
 
                             await manager.send_message_to_frontend(user_id=user_id, message_type="text", message=sending_message)
 
-                        elif content and "bounding_boxes" in content:
+                        elif content and "inference_results" in content:
                     
-                            bounding_boxes = content.get("bounding_boxes")
-                            if not isinstance(bounding_boxes, list):
-                                print(f"{device_id} Error: bounding_boxes is not a list.")
+                            inference_results = content.get("inference_results")
+                            if not isinstance(inference_results, list):
+                                print(f"{device_id} Error: inference_results is not a list.")
                             
                             
                             print(f"{device_id} Processing image...")
@@ -130,16 +131,17 @@ async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue:
                                 image = image.convert("RGB")
 
                             draw = ImageDraw.Draw(image)
-                            for box in bounding_boxes:
-                                if len(box) == 4:
-                                    left_up_x, left_up_y, right_down_x, right_down_y = map(int, box)
+                            for result in inference_results:
+                                print(f"Inference result category: {result.get('category', None)}, score: {result.get('score', None)}")
+                                if len(result["box"]) == 4:
+                                    left_up_x, left_up_y, right_down_x, right_down_y = map(int, result["box"])
                                     draw.rectangle(
                                         [(left_up_x, left_up_y), (right_down_x, right_down_y)],
                                         outline="red",
                                         width=3
                                     )
                                 else:
-                                    print(f"[{device_id}] Warning: Invalid bounding box format: {box}")
+                                    print(f"[{device_id}] Warning: Invalid bounding box format: {result.get('box', None)}")
                             
                             output_stream = io.BytesIO()
                             image.save(output_stream, format="JPEG")
@@ -275,3 +277,13 @@ async def model_inference(device_id: str, db: AsyncSession = Depends(get_db), cu
 @router.post("/mode_switch/{device_id}")
 async def model_switch(params: ReqeustScheme.ModeSwtichParams, device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
     return await DeviceController.mode_switch(db=db, user_id=current_user.get('user_id', None), device_id=device_id, mode=params.mode)
+
+
+@router.get("/model_download/{device_id}/{model_id}")
+async def model_download(device_id: str, model_id:str, db: AsyncSession = Depends(get_db)):
+    return await DeviceController.model_download(db=db, user_id="6e837227-93b7-461b-bc73-caa9828b7f26", device_id=device_id, model_id=model_id)
+
+
+@router.get("/model_switch/{device_id}/{model_id}")
+async def model_download(device_id: str, model_id:str, db: AsyncSession = Depends(get_db)):
+    return await DeviceController.model_switch(db=db, user_id="6e837227-93b7-461b-bc73-caa9828b7f26", device_id=device_id, model_id=model_id)

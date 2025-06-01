@@ -1,0 +1,38 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import FileResponse
+from fastapi import APIRouter,  Depends, File, UploadFile, Form
+from controllers.model.controllers import ModelController
+from controllers.user.controllers import UserController
+from utils.sql_manage import get_db
+
+
+router = APIRouter()
+
+
+@router.post("")
+async def create_firmware(
+    file: UploadFile = File(...),
+    name: str = Form(...),
+    description = Form(...),
+    model_type: str = Form(...),
+    labels: str = Form(...),
+    db: AsyncSession = Depends(get_db), 
+    current_user = Depends(UserController.get_current_user)
+):
+    return await ModelController.create_model(db=db, user_id=current_user.get("user_id", None), file=file, name=name, description=description, model_type=model_type, labels=labels)
+
+
+@router.get("")
+async def get_firmwares(db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return await ModelController.get_models(db=db, user_id=current_user.get("user_id", None))
+
+
+@router.delete("/{model_id}")
+async def delete_firmware(model_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return await ModelController.delete_model(db=db, model_id=model_id, user_id=current_user.get("user_id", None))
+
+
+@router.get("/download/{user_id}/{model_id}")
+async def ota_update(user_id: str, model_id: str, db: AsyncSession = Depends(get_db)):
+    firmware_path = "model/espdet_pico_416_416_cat.espdl"
+    return FileResponse(firmware_path)

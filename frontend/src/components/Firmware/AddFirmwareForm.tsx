@@ -1,4 +1,5 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { X } from 'lucide-react';
 import { AddFirmwareFormProps } from '@/components/firmware/types';
 import uploadFirmwaresAPI from '@/api/firmware/uploadFirmwareAPI';
@@ -36,7 +37,8 @@ const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose, setFirmwares
         // Close form
         onClose();
         // Update firmwares list
-        setFirmwares((prev) => [...prev, result.data.firmwares[0]])
+        const firmware = result.data.firmwares[0];
+        setFirmwares((prev) => [...prev, {...firmware, created_time: format(new Date(firmware.created_time), 'yyyy/MM/dd HH:mm')}])
 
       }else{
         alert("Upload failed");

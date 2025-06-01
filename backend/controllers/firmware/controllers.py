@@ -15,7 +15,7 @@ class FirmwareController:
     @classmethod
     async def create_firmware(cls, db: AsyncSession , file: UploadFile,  user_id: str, name: str, description: str):
         try:
-            directory = f"{ConfigManage.STORAGE_PATH}/{user_id}/"
+            directory = f"{ConfigManage.STORAGE_PATH}/firmwares/{user_id}/"
             os.makedirs(directory, exist_ok=True)
 
             location = f"{directory}{name}"
