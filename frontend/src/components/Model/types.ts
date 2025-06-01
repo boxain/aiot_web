@@ -6,6 +6,10 @@ export interface Model {
   model_type: string;
   created_time: string; 
   description: string;
+  labels: {
+    id: string;
+    name: string
+  }[];
 }
 
 export interface ModelProps {

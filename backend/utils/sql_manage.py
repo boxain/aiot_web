@@ -30,12 +30,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # Init DB Table
 async def init_db():
-    """
-    初始化資料庫（如有需要）
-    """
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        print(Base.metadata.tables.keys())
+        # await conn.run_sync(Base.metadata.drop_all)
+        # print(Base.metadata.tables.keys())
         await conn.run_sync(Base.metadata.create_all)
     
 # Clean DB Reousrces    

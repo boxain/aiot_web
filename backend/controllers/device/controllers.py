@@ -229,7 +229,7 @@ class DeviceController:
         
 
     @classmethod
-    async def model_download(cls, db: AsyncSession, user_id: str, device_id: str, model_id: str):
+    async def model_deploy(cls, db: AsyncSession, user_id: str, device_id: str, model_id: str):
         try:
             # Make sure device exist
             query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)

@@ -23,6 +23,13 @@ export interface FirmwareSelectionProps {
   cancleSelectDeviceMode: () => void;
 }
 
+export interface ModelSelectionProps {
+  selectedDevices: string[];
+  showSelectModel: boolean;
+  setShowSelectModel: Dispatch<SetStateAction<boolean>>;
+  cancleSelectDeviceMode: () => void;
+}
+
 export interface DeviceInfoProps {
   device: Device
 }

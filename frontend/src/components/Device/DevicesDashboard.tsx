@@ -10,6 +10,7 @@ import { Device } from "@/components/device/types";
 import getDevicesAPI from '@/api/device/getDevicesAPI';
 import AddDeviceForm from '@/components/device/AddDeviceForm';
 import FirmwareSelection from '@/components/device/FirmwareSelection';
+import ModelSelection from '@/components/device/ModelSelection';
 
 const DevicesDashboard = () => {
     const { stateQueue, setStateQueue } = useWs();
@@ -18,7 +19,9 @@ const DevicesDashboard = () => {
     const [showAddDeviceForm, setShowAddDeviceForm] = useState(false);
     const [isSelectDevice, setIsSelectDevice] = useState(false);
     const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
+    const [selectedType, setSelectedType] = useState<string>("");
     const [showSelectFirmware, setShowSelectFirmware] = useState(false);
+    const [showSelectModel, setShowSelectModel] = useState(false);
     
 
     useEffect(() => {
@@ -94,7 +97,8 @@ const DevicesDashboard = () => {
     /**
      * Switch select device mode for OTA
      */
-    const openSelectDeviceMode = () => {
+    const openSelectDeviceMode = (type: string) => {
+        setSelectedType(type);
         setIsSelectDevice(true);
     };
 
@@ -104,9 +108,11 @@ const DevicesDashboard = () => {
     const cancleSelectDeviceMode = () => {
         setIsSelectDevice(false);
         setSelectedDevices([]);
+        setSelectedType("");
         setShowSelectFirmware(false);
-
+        setShowSelectModel(false);
     };
+
 
     /** 
      * Return selected device number
@@ -119,8 +125,12 @@ const DevicesDashboard = () => {
     /**
      * Open firmware selection dashboard for OTA
      */
-    const openSelectFirmware = () => {
-        setShowSelectFirmware(true);
+    const openSelectionDashboard = () => {
+        if(selectedType === "Firmware"){
+            setShowSelectFirmware(true);
+        }else if(selectedType === "Model"){
+            setShowSelectModel(true);
+        }
     };
 
 
@@ -138,7 +148,7 @@ const DevicesDashboard = () => {
                     (
                         <>
                             <button
-                                onClick={openSelectFirmware}
+                                onClick={openSelectionDashboard}
                                 className={`flex items-center justify-center px-4 py-2  text-white text-sm rounded  ${checkSelectDeviceLength() ? "bg-green-500 hover:bg-green-700" : "bg-gray-500"}`}
                                 disabled={!checkSelectDeviceLength()}
                             >
@@ -166,11 +176,19 @@ const DevicesDashboard = () => {
                             </button>
 
                             <button
-                                onClick={openSelectDeviceMode}
+                                onClick={()=>{openSelectDeviceMode("Firmware")}}
                                 className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                             >
                                 <Plus className='w-4 h-4' />
                                 <div>Firmware Update</div>
+                            </button>
+
+                            <button
+                                onClick={()=>{openSelectDeviceMode("Model")}}
+                                className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                            >
+                                <Plus className='w-4 h-4' />
+                                <div>Model Deploy</div>
                             </button>
                         </>
                     )
@@ -204,6 +222,16 @@ const DevicesDashboard = () => {
                     selectedDevices={selectedDevices}
                     showSelectFirmware={showSelectFirmware} 
                     setShowSelectFirmware={setShowSelectFirmware} 
+                    cancleSelectDeviceMode={cancleSelectDeviceMode} 
+                />
+            )} 
+
+            {/* Model Selection Dashboard */}
+            {showSelectModel && (
+                <ModelSelection 
+                    selectedDevices={selectedDevices}
+                    showSelectModel={showSelectModel} 
+                    setShowSelectModel={setShowSelectModel} 
                     cancleSelectDeviceMode={cancleSelectDeviceMode} 
                 />
             )}         
