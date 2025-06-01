@@ -3,10 +3,12 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import registerAPI from '@/api/user/register';
 
 
 export default function Register() {
+    const router = useRouter();
     const [userName, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -23,6 +25,7 @@ export default function Register() {
             const result = await registerAPI(userName, email, password);
             if(result.success){
                 alert("Register success");
+                router.push("/user/login");
             }else{
                 alert("Register failed");
             }

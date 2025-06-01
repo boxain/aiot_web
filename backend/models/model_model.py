@@ -11,6 +11,7 @@ class Model(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     model_type = Column(String, nullable=False)
     labels = Column(JSON, nullable=False)
+    file_path = Column(String, nullable=False)
     created_time = Column(DateTime, nullable=False, server_default=func.now())
     updated_time = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     deleted_time = Column(DateTime, nullable=True)

@@ -9,6 +9,7 @@ class Firmware(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    file_path = Column(String, nullable=False)
     created_time = Column(DateTime, nullable=False, server_default=func.now())
     updated_time = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     deleted_time = Column(DateTime, nullable=True)

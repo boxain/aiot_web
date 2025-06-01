@@ -1,6 +1,8 @@
 import os
 import json
+import uuid
 import traceback
+from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from models.model_model import Model
+from models.device_to_model_model import DeviceModelRelation
 from utils.config_manage import ConfigManage
 import utils.exception as GeneralExc
 
@@ -16,20 +19,23 @@ class ModelController:
     @classmethod
     async def create_model(cls, db: AsyncSession , file: UploadFile,  user_id: str, name: str, description: str, model_type: str, labels: str):
         try:
-
+            model_id = uuid.uuid4()
             parsed_labels = json.loads(labels)
-            directory = f"{ConfigManage.STORAGE_PATH}/models/{user_id}/"
-            os.makedirs(directory, exist_ok=True)
 
-            location = f"{directory}{name}"
-            with open(location, "wb") as f:
-                f.write(await file.read())
+            original_filename = file.filename
+            file_extension = Path(original_filename).suffix
+            directory = f"{ConfigManage.STORAGE_PATH}/models/{user_id}/"
+            file_path = f"{directory}{model_id}.{file_extension}"
             
-            # 補上儲存路徑
-            model = Model(name=name, description=description, user_id=user_id, model_type=model_type, labels=parsed_labels)
+            model = Model(name=name, description=description, user_id=user_id, model_type=model_type, labels=parsed_labels, file_path=file_path)
             db.add(model)
             await db.commit()
             await db.refresh(model)
+
+            
+            os.makedirs(directory, exist_ok=True)
+            with open(file_path, "wb") as f:
+                f.write(await file.read())
 
             return { 
                 "success": True,

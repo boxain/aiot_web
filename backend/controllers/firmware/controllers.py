@@ -1,5 +1,8 @@
 import os
+import json
+import uuid
 import traceback
+from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,17 +18,24 @@ class FirmwareController:
     @classmethod
     async def create_firmware(cls, db: AsyncSession , file: UploadFile,  user_id: str, name: str, description: str):
         try:
-            directory = f"{ConfigManage.STORAGE_PATH}/firmwares/{user_id}/"
-            os.makedirs(directory, exist_ok=True)
+            firmware_id = uuid.uuid4()
+            original_filename = file.filename
+            file_extension = Path(original_filename).suffix
 
-            location = f"{directory}{name}"
-            with open(location, "wb") as f:
-                f.write(await file.read())
+            directory = f"{ConfigManage.STORAGE_PATH}/firmwares/{user_id}/"
+            file_path = f"{directory}{firmware_id}.{file_extension}"
+  
             
-            firmware = Firmware(name=name, description=description, user_id=user_id)
+            firmware = Firmware(name=name, description=description, user_id=user_id, file_path=file_path)
             db.add(firmware)
             await db.commit()
             await db.refresh(firmware)
+
+            os.makedirs(directory, exist_ok=True)
+            with open(file_path, "wb") as f:
+                f.write(await file.read())
+
+
             return { 
                 "success": True,
                 "data": {
