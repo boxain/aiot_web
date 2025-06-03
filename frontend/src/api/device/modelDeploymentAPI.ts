@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 const modelDeploymentAPI = async (device_ids: string[], model_id: string) => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/device/model/deployment`;
+        const requestURI = `${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}/api/device/model/deployment`;
         const access_token = Cookies.get("access_token");
         const token_type = Cookies.get("token_type");
         

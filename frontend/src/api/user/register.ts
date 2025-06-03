@@ -4,7 +4,7 @@ import axios, { AxiosError } from "axios";
 const registerAPI = async (userName: string, email: string, password: string) => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/user/register`;
+        const requestURI = `${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}/api/user/register`;
 
         const jsonBody = {
             name: userName,

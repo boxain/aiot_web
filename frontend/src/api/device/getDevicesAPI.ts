@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 const getDevicesAPI = async () => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/device`;
+        const requestURI = `${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}/api/device`;
         const access_token = Cookies.get("access_token");
         const token_type = Cookies.get("token_type");
         

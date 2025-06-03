@@ -6,15 +6,14 @@ export interface Model {
   model_type: string;
   created_time: string; 
   description: string;
-  labels: {
-    id: string;
-    name: string
-  }[];
+  labels: Record<string,string>;
 }
 
 export interface ModelProps {
   model: Model;
-  setModels: Dispatch<SetStateAction<Model[]>>
+  setModels: Dispatch<SetStateAction<Model[]>>;
+  showLabels: boolean;
+  toggleLabels: (model_id: string) => void;
 }
 
 

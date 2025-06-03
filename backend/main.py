@@ -48,9 +48,26 @@ if __name__ == '__main__':
     uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="debug")
 
 '''
-1. 前端 busy 狀態防呆
-2. Device mode 儲存
-3. Notification
-4. 頁面美化
-5. 首頁更新
+Web Version 1.0
+3. 前端 busy 狀態防呆         --- (06/04)
+4. Device mode 儲存          --- (06/03)
+5. task completed db update  --- (06/03)
+6. 頁面美化                   --- (06/04)
+7. 首頁更新                   --- (06/04)
+8. Log 實現                   --- (06/04)
+'''
+
+'''
+Device Version 1.0
+1. task completed            
+2. Model customizer
+3. log
+4. refactor
+'''
+
+'''
+Version 2.0
+1. MQTT
+2. Notification
+3. QR code provisioning
 '''

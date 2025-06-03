@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 const verificationAPI = async (access_token: string, token_type: string) => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/user/verification`;
+        const requestURI = `${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}/api/user/verification`;
         
         const headers = {
             headers: {

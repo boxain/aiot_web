@@ -11,6 +11,7 @@ import getModelsAPI from '@/api/model/getModelsAPI';
 
 const ModelsDashboard = () => {
     const [models, setModels] = useState<Model[]>([]);
+    const [showLabels, setShowLabels] = useState<Record<string,boolean>>({});
     const [isGetModels, setIsGetModels ] = useState(true);
     const [showAddModelForm, setShowAddModelForm] = useState(false);
     
@@ -27,9 +28,14 @@ const ModelsDashboard = () => {
                             created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')
                         }
                     })
-                    console.log("models", formattedModels);
-
                     setModels(formattedModels)
+
+                    const initialShowLabels: Record<string, boolean> = {};
+                    formattedModels.forEach((model: Model) => {
+                        initialShowLabels[model.id] = false;
+                    });
+                    setShowLabels(initialShowLabels);
+
                 }else{
                     alert("Get models failed")
                 }
@@ -48,6 +54,13 @@ const ModelsDashboard = () => {
 
     const handleCloseAddModelForm = () => {
         setShowAddModelForm(false);
+    };
+
+    const toggleLabels = (model_id: string) => {
+        setShowLabels(prev => ({
+            ...prev,
+            [model_id]: !prev[model_id]
+        }));
     };
     
 
@@ -69,7 +82,7 @@ const ModelsDashboard = () => {
                     models && models.length > 0 &&
                     (   
                         models.map((model) => (
-                            <ModelCard model={model} setModels={setModels}  key={model.id} />
+                            <ModelCard key={model.id} model={model} setModels={setModels} showLabels={showLabels[model.id]} toggleLabels={toggleLabels}/>
                         ))
                     )
                 }

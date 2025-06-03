@@ -13,8 +13,8 @@ import modelDeploymentAPI from '@/api/device/modelDeploymentAPI';
 const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelected: boolean; onSelect: (id: string) => void; }) => {  
     const [showAllLabels, setShowAllLabels] = useState(false);
     const MAX_LABELS_TO_SHOW = 5;
-    const displayedLabels = showAllLabels ? model.labels : model.labels.slice(0, MAX_LABELS_TO_SHOW);
-    const hasMoreLabels = model.labels.length > MAX_LABELS_TO_SHOW;
+    const displayedLabels = showAllLabels ? Object.entries(model.labels) : Object.entries(model.labels).slice(0, MAX_LABELS_TO_SHOW);
+    const hasMoreLabels = Object.keys(model.labels).length > MAX_LABELS_TO_SHOW;
 
     // Base model type to determine css style
     const getModelTypeColor = () => {
@@ -50,15 +50,15 @@ const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelect
             </div>
 
             {/* -- Labels -- */}
-            {model.labels.length > 0 && (
+            {Object.keys(model.labels).length > 0 && (
             <div className="mb-2">
                 <div className="flex flex-wrap gap-2">
                 {displayedLabels.map((label, index) => (
                     <span
-                        key={label.id}
+                        key={index}
                         className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full border border-gray-200"
                     >
-                        {index}: {label.name}
+                        {index}: {label}
                     </span>
                 ))}
                 {hasMoreLabels && (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 import { X, PlusCircle, Trash2 } from 'lucide-react'; // Added PlusCircle and Trash2
 import { AddModelFormProps, ModelTypeOption } from '@/components/model/types';
 import uploadModelAPI from '@/api/model/uploadModelAPI'; // Assuming this API will be adapted or replaced for models with labels
@@ -26,7 +27,7 @@ const AddModelForm: React.FC<AddModelFormProps> = ({ onClose, setModels }) => {
 
   const handleAddLabel = () => {
     // Add a new label object with a unique ID (timestamp used here for simplicity)
-    setLabels([...labels, { id: Date.now().toString(), name: '' }]);
+    setLabels([...labels, { id: uuidv4(), name: '' }]);
   };
 
 
@@ -56,13 +57,12 @@ const AddModelForm: React.FC<AddModelFormProps> = ({ onClose, setModels }) => {
 
     setIsLoading(true);
     try {
-      // Format labels for submission. Example: { "0": "cat", "1": "dog" }
       const formattedLabels = labels.reduce((acc, label, index) => {
-        acc[index.toString()] = label.name.trim(); // Ensure names are trimmed
+        acc[index.toString()] = label.name.trim();
         return acc;
       }, {} as Record<string, string>);
 
-      const labels_str = JSON.stringify(labels);
+      const labels_str = JSON.stringify(formattedLabels);
       const result = await uploadModelAPI(modelFile, modelName, description, modelType, labels_str);
       
       if (result.success) {

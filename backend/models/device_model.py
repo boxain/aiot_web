@@ -8,6 +8,7 @@ class Device(Base):
     id = Column(UUID(as_uuid=True), default=uuid.uuid4 , nullable=False, primary_key=True)
     name = Column(String, nullable=False)
     mac = Column(String, nullable=False)
+    operation_model = Column(String, nullable=False, default="stand by mode")
     description = Column(String, nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     firmware_id = Column(UUID(as_uuid=True), ForeignKey('firmwares.id'), nullable=True)

@@ -4,7 +4,7 @@ import axios, { AxiosError } from "axios";
 const loginAPI = async (userName: string, password: string) => {
     try{
 
-        const requestURI = `http://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/user/login`;
+        const requestURI = `${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}/api/user/login`;
 
         const formData = new FormData();
         formData.append("username", userName);
