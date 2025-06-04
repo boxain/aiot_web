@@ -1,11 +1,15 @@
 import { Dispatch, SetStateAction } from "react";
 
 export interface Device {
-  status: "connected" | "disconnected" | "busy";
   id: string;
   name: string;
   mac: string;
+  status: "connected" | "disconnected" | "busy";
+  busy_reason: "MODE_SWITCH" | "OTA" | "MODEL_SWITCH" | "MODEL_DOWNLOAD" ;
   version: string;
+  user_id: string;
+  current_model_id: string;
+  firmware_id: string;
   description: string;
 }
 
@@ -35,7 +39,8 @@ export interface DeviceInfoProps {
 }
 
 export interface SwitchButtonProps {
-  id: string;
+  device: Device;
+  setDevice: Dispatch<SetStateAction<Device|null>>;
   activeMode: string;
   setActiveMode: Dispatch<SetStateAction<string>>;
   isSwitchMode: boolean;

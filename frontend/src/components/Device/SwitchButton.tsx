@@ -1,16 +1,24 @@
-import { PowerCircle, Clock } from "lucide-react";
+import { PowerCircle, Clock,  } from "lucide-react";
 import { SwitchButtonProps } from "@/components/device/types";
 import switchModeAPI from "@/api/device/switchModeAPI";
 
-const SwitchButton: React.FC<SwitchButtonProps> = ({ id, activeMode, setActiveMode, isSwitchMode, setIsSwitchMode }) => {
+const SwitchButton: React.FC<SwitchButtonProps> = ({ device, setDevice, activeMode, setActiveMode, isSwitchMode, setIsSwitchMode }) => {
 
     const handleModeSwitch = async (mode: string) => {
-        if(isSwitchMode || activeMode === mode) return; // Prevent switching if already in mode or switch is in progress
+        if(isSwitchMode || activeMode === mode || device.status==="busy") return; // Prevent switching if already in mode or switch is in progress
         setIsSwitchMode(true);
         try{
-            const result = await switchModeAPI(id, mode);
+            const result = await switchModeAPI(device.id, mode);
             if(result.success){
-                setActiveMode(mode);
+                setDevice(prevDevice => {
+                    if(!prevDevice) return null;
+                    return {
+                        ...prevDevice,
+                        status: "busy",
+                        busy_reason: "MODE_SWITCH"
+                    }
+                })
+                //setActiveMode(mode);
             }else{
                 alert("Switch Mode Failed");
             }
@@ -19,8 +27,10 @@ const SwitchButton: React.FC<SwitchButtonProps> = ({ id, activeMode, setActiveMo
         }
     };
 
+    const isDeviceCurrentlySwitchingMode = device.status === 'busy' && device.busy_reason === "MODE_SWITCH";
+ 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {/* Stand By Mode Button */}
             <button
                 onClick={() => handleModeSwitch('STAND_BY_MODE')}
@@ -51,6 +61,16 @@ const SwitchButton: React.FC<SwitchButtonProps> = ({ id, activeMode, setActiveMo
                 <span className="text-base font-medium">Continuous Mode</span>
             </button>
               
+            {/* Mask */}
+            {isDeviceCurrentlySwitchingMode && (
+            <div className="absolute inset-0 bg-slate-300 bg-opacity-60 dark:bg-slate-700 dark:bg-opacity-70 flex flex-col items-center justify-center z-10 rounded-lg">
+                <p className="text-slate-700 dark:text-slate-200 text-md font-medium">
+                    mode switch processing...
+                </p>
+            </div>
+            )}
+
+
         </div>
     )
 }

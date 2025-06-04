@@ -14,6 +14,9 @@ interface WebSocketContextType {
 interface ConnectionStateType {
     action: string;
     device_id: string;
+    mode?: "CONTINUOUS_MODE" | "STAND_BY_MODE";
+    model_id?: string;
+    firmware_id?: string;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -51,7 +54,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
             setStatus("connecting");
 
 
-            const requestURI = `ws://${process.env.NEXT_PUBLIC_BACKEND_HOSTNAME}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/api/user/ws/${user.id}`;
+            const requestURI = `${process.env.NEXT_PUBLIC_BACKEND_WEBSOCKET_HOSTNAME}/api/user/ws/${user.id}`;
             const websocket = new WebSocket(requestURI);
             ws.current = websocket;
 
@@ -93,16 +96,15 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
                             }else if(data.action === "MODE_SWITCH"){
 
-                                const { device_id, status } = data;
+                                const { device_id, status, mode } = data;
                                 console.log(`MODE_SWITCH status: ${status} for device: ${device_id}`);
                                 if(status === "RECEIVED"){
                                     setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
                                 }else if(status === "COMPLETED"){
-                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, mode}]);
                                 }else if(status === "ERROR"){
-                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, mode}]);
                                 }
-
                             }else if(data.action === "INFERENCE_RESULT"){
                                 
                                 const { device_id, image_data } = data;
@@ -127,8 +129,10 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                                 }
                             
                             }else{
-                                console.error("Invalid websocket message...");
+                                console.log("Not valid task");
                             }
+
+
                         }catch(error){
                             console.error("Failed to parse JSON: ", error);
                         }

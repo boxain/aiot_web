@@ -66,6 +66,10 @@ const DeviceDetail = () => {
       if(message.device_id !== id) return;
       if (message.action === "CONNECTED") {
         setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
+        if(device?.busy_reason==="MODE_SWITCH" && message.mode){
+          setActiveMode(message.mode);
+        }
+
       } else if (message.action === "DISCONNECTED") {
         setDevice(prev => prev ? { ...prev, status: "disconnected" } : prev);
       } else if (message.action === "BUSY") {
@@ -150,7 +154,7 @@ const DeviceDetail = () => {
                 Device Control
               </h2>
               
-              <SwitchButton id={id} activeMode={activeMode} setActiveMode={setActiveMode} isSwitchMode={isSwitchMode} setIsSwitchMode={setIsSwitchMode} />  
+              <SwitchButton device={device} setDevice={setDevice} activeMode={activeMode} setActiveMode={setActiveMode} isSwitchMode={isSwitchMode} setIsSwitchMode={setIsSwitchMode} />  
               <ResetButton id={id} isResetDevice={isResetDevice} setIsResetDevice={setIsResetDevice} />
             </div>
 

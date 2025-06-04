@@ -50,7 +50,6 @@ if __name__ == '__main__':
 '''
 Web Version 1.0
 3. 前端 busy 狀態防呆         --- (06/04)
-4. Device mode 儲存          --- (06/03)
 5. task completed db update  --- (06/03)
 6. 頁面美化                   --- (06/04)
 7. 首頁更新                   --- (06/04)
