@@ -1,11 +1,8 @@
-import os
 import io
 import json
 import base64
 import traceback
 import asyncio
-from datetime import datetime
-from typing import Annotated
 from PIL import Image, ImageDraw
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import FileResponse
@@ -37,137 +34,6 @@ async def get_device_with_id(device_id: str, db: AsyncSession = Depends(get_db),
     return await DeviceController.get_device_with_deviceId(db=db, device_id=device_id)
 
 
-async def process_device_websocket_data(text_queue: asyncio.Queue, binary_queue: asyncio.Queue, db: AsyncSession, user_id:str, device_id: str, manager: ConnectionManager):
-    # update database when received "completed"
-    while True:
-        try:
-            text_mes = await text_queue.get()
-            
-            if text_mes is None:
-                break
-                 
-            data: dict = json.loads(text_mes)
-            
-            if(not data.get("action", None)):
-                print("Error: The message doen't contain action")
-            else:
-                match data['action']:
-                    case "MODE_SWITCH":
-                        log_id = f"{user_id}:{device_id}"
-                        print(f"{log_id} - Received MODE_SWITCH task.")
-
-                        status = data.get("status", None)
-                        if status is None:
-                            print(f"{log_id} - Invalid status.")
-                        elif status == "RECEIVED":
-                            print(f"{log_id} - status *RECEIVED*")
-                            manager.set_device_connection_state(device_id=device_id, connection_state="busy")
-                            await manager.active_frontend_task(user_id=user_id, task="MODE_SWITCH", type="text", device_id=device_id, status="RECEIVED")
-  
-                        elif status == "COMPLETED":
-                            print(f"{log_id} - status *COMPLETED*")
-                            manager.set_device_connection_state(device_id=device_id, connection_state="connected")
-                            await manager.active_frontend_task(user_id=user_id, task="MODE_SWITCH", type="text", device_id=device_id, status="COMPLETED")
-
-                        elif status == "ERROR":
-                            print(f"{log_id} - status *ERROR*")
-                            manager.set_device_connection_state(device_id=device_id, connection_state="connected")
-                            await manager.active_frontend_task(user_id=user_id, task="MODE_SWITCH", type="text", device_id=device_id, status="ERROR")
-
-
-                    case "OTA":
-                        log_id = f"{user_id}:{device_id}"
-                        print(f"{log_id} - Received OTA task.")
-
-                        status = data.get("status", None)
-                        if status is None:
-                            print(f"{log_id} - Invalid status.")
-                        elif status == "RECEIVED":
-                            print(f"{log_id} - status *RECEIVED*")
-                            manager.set_device_connection_state(device_id=device_id, connection_state="busy")
-                            await manager.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="RECEIVED")
-  
-                        elif status == "COMPLETED":
-                            print(f"{log_id} - status *COMPLETED*")
-                            manager.set_device_connection_state(device_id=device_id, connection_state="connected")
-                            await manager.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="COMPLETED")
-
-                        elif status == "ERROR":
-                            print(f"{log_id} - status *ERROR*")
-                            manager.set_device_connection_state(device_id=device_id, connection_state="connected")
-                            await manager.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="ERROR")
-
-
-                    case "INFERENCE_RESULT":
-                        binary_mes = await binary_queue.get()
-                        
-                        if binary_mes is None:
-                            print(f"Server received wrong inference serial from {device_id}")
-                            continue
-
-                        content = data.get("content", None)
-                        if content is None or "inference_results" not in content:
-                            print("INFERENCE_RESULT:", device_id)
-                            encoded_image = base64.b64encode(binary_mes).decode("utf-8")
-                            sending_message = {
-                                "action": "INFERENCE_RESULT",
-                                "device_id": device_id,
-                                "image_data": encoded_image
-                            }
-
-                            await manager.send_message_to_frontend(user_id=user_id, message_type="text", message=sending_message)
-
-                        elif content and "inference_results" in content:
-                    
-                            inference_results = content.get("inference_results")
-                            if not isinstance(inference_results, list):
-                                print(f"{device_id} Error: inference_results is not a list.")
-                            
-                            
-                            print(f"{device_id} Processing image...")
-                            image_stream = io.BytesIO(binary_mes)
-                            image = Image.open(image_stream)
-                            if image.mode != "RGB":
-                                image = image.convert("RGB")
-
-                            draw = ImageDraw.Draw(image)
-                            for result in inference_results:
-                                print(f"Inference result category: {result.get('category', None)}, score: {result.get('score', None)}")
-                                if len(result["box"]) == 4:
-                                    left_up_x, left_up_y, right_down_x, right_down_y = map(int, result["box"])
-                                    draw.rectangle(
-                                        [(left_up_x, left_up_y), (right_down_x, right_down_y)],
-                                        outline="red",
-                                        width=3
-                                    )
-                                else:
-                                    print(f"[{device_id}] Warning: Invalid bounding box format: {result.get('box', None)}")
-                            
-                            output_stream = io.BytesIO()
-                            image.save(output_stream, format="JPEG")
-                            image_bytes_with_boxes = output_stream.getvalue()
-                            encoded_image = base64.b64encode(image_bytes_with_boxes).decode("utf-8")
-                            sending_message = {
-                                "action": "INFERENCE_RESULT",
-                                "device_id": device_id,
-                                "image_data": encoded_image
-                            }
-
-                            await manager.send_message_to_frontend(user_id=user_id, message_type="text", message=sending_message)
-
-
-        except json.JSONDecodeError:
-            print(traceback.format_exc())
-        
-
-        except asyncio.CancelledError:
-            pass
-            
-        
-        except Exception:
-            print(traceback.format_exc())
-
-
 @router.websocket("/ws/{user_id}/{mac}")
 async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: AsyncSession = Depends(get_db)):
     text_queue = asyncio.Queue(maxsize=50)
@@ -180,7 +46,7 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
 
         await websocket.accept()
         await ConnectionManager.connect_device(user_id=user_id , device_id=device_id, websocket=websocket)
-        process_task = asyncio.create_task(process_device_websocket_data(text_queue, binary_queue, db, user_id, device_id, ConnectionManager))
+        process_task = asyncio.create_task(ConnectionManager.listen_device_message(text_queue, binary_queue, db, user_id, device_id, DeviceController.task_completion_update))
 
         while True:
             data = await websocket.receive()

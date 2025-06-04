@@ -4,22 +4,26 @@ import asyncio
 import websockets
 
 
-async def OTA_task(status: str, delay: int):
+async def OTA_task(task_id: str, status: str, delay: int):
     print(f'OTA - status: {status}, delay: {delay}')
     await asyncio.sleep(delay=delay)
     return {
         "action": "OTA",
+        "task_id": task_id,
         "status": status,
     }
 
 
-async def mode_switch_task(status: str, delay: int):
+async def mode_switch_task(task_id: str, status: str, delay: int):
     print(f'MODE SWITCH - status: {status}, delay: {delay}')
     await asyncio.sleep(delay=delay)
-    return {
+
+    response = {
         "action": "MODE_SWITCH",
+        "task_id": task_id,
         "status": status,
     }
+    return response
 
 
 async def inference_task(delay: int):
@@ -51,9 +55,11 @@ async def simple_websocket_client(uri):
                     if action == "OTA":
                         print("="*30)
                         print("Start OTA Task")
-                        response = await OTA_task(status="RECEIVED", delay=3)
+                        print("Received mesage: ", data)
+                        task_id = data.get("task_id", None)
+                        response = await OTA_task(task_id=task_id, status="RECEIVED", delay=3)
                         await websocket.send(json.dumps(response))
-                        response = await OTA_task(status="COMPLETED", delay=5)
+                        response = await OTA_task(task_id=task_id, status="COMPLETED", delay=5)
                         await websocket.send(json.dumps(response))
                         print("End OTA Task")
                         print("="*30)
@@ -61,9 +67,11 @@ async def simple_websocket_client(uri):
                     elif action == "MODE_SWITCH":
                         print("="*30)
                         print("Start MODE_SWITCH Task")
-                        response = await mode_switch_task(status="RECEIVED", delay=3)
+                        print("Received mesage: ", data)
+                        task_id = data.get("task_id", None)
+                        response = await mode_switch_task(task_id=task_id, status="RECEIVED", delay=3)
                         await websocket.send(json.dumps(response))
-                        response = await mode_switch_task(status="COMPLETED", delay=5)
+                        response = await mode_switch_task(task_id=task_id, status="COMPLETED", delay=5)
                         await websocket.send(json.dumps(response))
                         print("End MODE_SWITCH Task")
                         print("="*30)
@@ -107,7 +115,7 @@ if __name__ == "__main__":
 
     user_id = input("Enter user_id: ").strip()
     while not user_id:
-        user_id = "6e837227-93b7-461b-bc73-caa9828b7f26"
+        user_id = "b70e1454-75d8-4ff0-bc2f-3f6b055a6e92"
         
     mac_id = input("Enter mac_id: ").strip()
     while not mac_id:

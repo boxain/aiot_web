@@ -198,7 +198,7 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({ selectedDevices, showSe
                         (
                             <div className="text-center text-gray-500 py-10 flex flex-col items-center">
                             <ListRestart className="w-10 h-10 mb-2 text-gray-400" />
-                            <p>No firmware versions available.</p>
+                            <p>No models available.</p>
                             <p className="text-sm">Please upload firmware to proceed.</p>
                             </div>
                         )}

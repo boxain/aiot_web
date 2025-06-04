@@ -15,7 +15,7 @@ const ModelCard = ({ model, setModels, showLabels, toggleLabels} : ModelProps) =
         alert("Delete firmware success !");
         setModels((prev) => prev.filter((fm => fm.id !== id)))
       }else{
-        alert("Delete firmware failed....");
+        alert("Delete model failed...");
       }
     }finally{
       setOnDelete(false)
