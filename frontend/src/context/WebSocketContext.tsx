@@ -15,8 +15,8 @@ interface ConnectionStateType {
     action: string;
     device_id: string;
     mode?: "CONTINUOUS_MODE" | "STAND_BY_MODE";
-    model_id?: string;
-    firmware_id?: string;
+    model_name?: string;
+    firmware_name?: string;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -84,12 +84,12 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
                             }else if(data.action === "OTA"){
 
-                                const { device_id, status, firmware_id } = data;
-                                console.log(`OTA status: ${status} for device: ${device_id}`);
+                                const { device_id, status, firmware_name } = data;
+                                console.log(`OTA: ${firmware_name} status: ${status} for device: ${device_id}`);
                                 if(status === "RECEIVED"){
                                     setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
                                 }else if(status === "COMPLETED"){
-                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, firmware_name}]);
                                 }else if(status === "ERROR"){
                                     setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
                                 }
@@ -120,12 +120,12 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
                             }else if(data.action === "MODEL_SWITCH"){
 
-                                const { device_id, status, model_id } = data;
-                                console.log(`MODEL_SWITCH status: ${status} for device: ${device_id}`);
+                                const { device_id, status, model_name } = data;
+                                console.log(`MODEL_SWITCH: ${model_name} status: ${status} for device: ${device_id}`);
                                 if(status === "RECEIVED"){
                                     setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
                                 }else if(status === "COMPLETED"){
-                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, model_id}]);
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, model_name}]);
                                 }else if(status === "ERROR"){
                                     setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
                                 }

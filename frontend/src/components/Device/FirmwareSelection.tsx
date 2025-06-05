@@ -29,7 +29,7 @@ const FirmwareListItem = ({ firmware, isSelected, onSelect }: { firmware: Firmwa
   );
 };
 
-const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ selectedDevices, showSelectFirmware, setShowSelectFirmware, cancleSelectDeviceMode }) => {
+const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ setDevices, selectedDevices, showSelectFirmware, setShowSelectFirmware, cancleSelectDeviceMode }) => {
     const [firmwares, setFirmwares] = useState<Firmware[]>([]);
     const [isGetFirmwares, setIsGetFirmwares ] = useState(true);
     const [isOTAUpdate, setIsOTAUpdate] = useState(false);
@@ -77,6 +77,15 @@ const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ selectedDevices, 
             const result = await otaAPI(selectedDevices, selectedFirmwareId);
             if(result.success){
                 alert(result.message);
+                setDevices(prev =>
+                    prev.map(device => {
+                        if(device.id === selectedDevices[0]){
+                            return { ...device, busy_reason: "OTA", status: "busy"}
+                        }else{
+                            return device
+                        }
+                    })
+                );
                 handleCancelClick();
             }else{
                 alert(result.message);

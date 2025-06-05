@@ -11,7 +11,7 @@ const InfoItem = ({ icon, label, value }: { icon: React.ReactNode, label: string
   </div>
 );
 
-const DeviceInfo: React.FC<DeviceInfoProps> = ({ device }) => {
+const DeviceInfo: React.FC<DeviceInfoProps> = ({ device, setDevice }) => {
     const [showSwitchModel, setShowSwitchModel] = useState(false);
 
     const modelListClicked = () => {
@@ -28,8 +28,8 @@ const DeviceInfo: React.FC<DeviceInfoProps> = ({ device }) => {
                     <InfoItem icon={<Server size={18} />} label="Device Name" value={device?.name} />
                     <InfoItem icon={<Cpu size={18} />} label="Processor" value={"N/A"} />
                     <InfoItem icon={<Info size={18} />} label="MAC Address" value={device?.mac} />
-                    <InfoItem icon={<Info size={18} />} label="Firmware Version" value={device.firmware_id ?? "N/A"} />
-                    <InfoItem icon={<MemoryStick size={18} />} label="Model Name" value={"N/A"} />
+                    <InfoItem icon={<Info size={18} />} label="Firmware Version" value={device.firmware_name ?? "N/A"} />
+                    <InfoItem icon={<MemoryStick size={18} />} label="Model Name" value={device.model_name ?? "N/A"} />
                     <InfoItem icon={<Battery size={18} />} label="Battery Level" value={"N/A"} /> {/* Replace with actual data */}
                     <InfoItem icon={<HardDrive size={18} />} label="SD Card Remaining" value={"N/A"} />
                     <div className="flex items-center space-x-3">
@@ -41,7 +41,7 @@ const DeviceInfo: React.FC<DeviceInfoProps> = ({ device }) => {
                 </div>
             </div>
 
-            {showSwitchModel && <ModelSwitch device_id={device.id} model_id={device.current_model_id} showSwitchModel={showSwitchModel} setShowSwitchModel={setShowSwitchModel} /> }
+            {showSwitchModel && <ModelSwitch device={device} setDevice={setDevice} showSwitchModel={showSwitchModel} setShowSwitchModel={setShowSwitchModel} /> }
         </>
     )
 }

@@ -94,17 +94,17 @@ const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelect
 };
 
 
-const ModelSwitch: React.FC<ModelSwitchProps> = ({ device_id, model_id, showSwitchModel, setShowSwitchModel }) => {
+const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitchModel, setShowSwitchModel }) => {
     const [models, setModels] = useState<Model[]>([]);
     const [isGetModels, setIsGetModels ] = useState(true);
     const [isDeploymentUpdate, setIsDeploymentUpdate] = useState(false);
-    const [selectedModelId, setSelectedModelId] = useState<string | null>(model_id ?? null);
+    const [selectedModelId, setSelectedModelId] = useState<string | null>(device.current_model_id ?? null);
 
     useEffect(() => {
 
         const getModels = async () => {
             try{
-                const result = await getModelsWithDeviceIdAPI(device_id);
+                const result = await getModelsWithDeviceIdAPI(device.id);
                 if(result.success){
 
                     const formattedModels = result.data.models.map((model: Model) => {
@@ -138,10 +138,20 @@ const ModelSwitch: React.FC<ModelSwitchProps> = ({ device_id, model_id, showSwit
 
         try{
             setIsDeploymentUpdate(true);
-            const result = await modelSwitchAPI(device_id, selectedModelId);
+            const result = await modelSwitchAPI(device.id, selectedModelId);
             if(result.success){
                 alert(result.message);
                 handleCancelClick();
+
+                setDevice(prevDevice => {
+                    if(!prevDevice) return null;
+                    return {
+                        ...prevDevice,
+                        status: "busy",
+                        busy_reason: "MODEL_SWITCH"
+                    }
+                })
+
             }else{
                 alert(result.message);
             }

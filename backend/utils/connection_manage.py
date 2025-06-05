@@ -229,7 +229,7 @@ class ConnectionManager:
                             task_info = cls.get_device_task(device_id=device_id, task_id=task_id)
                             if task_info:
                                 await device_update_callback(db, user_id, device_id, task_info)
-                                await cls.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="COMPLETED", firmware_id=task_info["params"]["firmware_id"])
+                                await cls.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="COMPLETED", firmware_name=task_info["params"]["firmware_name"])
 
                         elif status == "ERROR":
                             print(f"{log_id} - status *ERROR*")
@@ -254,7 +254,7 @@ class ConnectionManager:
                             task_info = cls.get_device_task(device_id=device_id, task_id=task_id)
                             if task_info:
                                 await device_update_callback(db, user_id, device_id, task_info)
-                                await cls.active_frontend_task(user_id=user_id, task="MODEL_DOWNLOAD", type="text", device_id=device_id, status="COMPLETED", firmware_id=task_info["params"]["model_id"])
+                                await cls.active_frontend_task(user_id=user_id, task="MODEL_DOWNLOAD", type="text", device_id=device_id, status="COMPLETED")
 
 
                         elif status == "ERROR":
@@ -280,7 +280,7 @@ class ConnectionManager:
                             task_info = cls.get_device_task(device_id=device_id, task_id=task_id)
                             if task_info:
                                 await device_update_callback(db, user_id, device_id, task_info)
-                                await cls.active_frontend_task(user_id=user_id, task="MODEL_SWITCH", type="text", device_id=device_id, status="COMPLETED", firmware_id=task_info["params"]["model_id"])
+                                await cls.active_frontend_task(user_id=user_id, task="MODEL_SWITCH", type="text", device_id=device_id, status="COMPLETED", model_name=task_info["params"]["model_name"])
 
                         elif status == "ERROR":
                             print(f"{log_id} - status *ERROR*")

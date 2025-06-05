@@ -17,4 +17,5 @@ class Model(Base):
     updated_time = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     deleted_time = Column(DateTime, nullable=True)
 
+    devices_using_as_current_model = relationship("Device", foreign_keys="[Device.current_model_id]", back_populates="current_model")
     device_model_relations_to_devices = relationship("DeviceModelRelation", back_populates="model")

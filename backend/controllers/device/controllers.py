@@ -1,12 +1,15 @@
 import traceback
 from datetime import datetime
+from sqlalchemy import select, update
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+
 
 
 from models.device_model import Device
 from models.firmware_model import Firmware
+from models.model_model import Model
 from models.device_to_model_model import DeviceModelRelation
 import routes.device.request_schema as ReqeustSchema
 from utils.connection_manage import ConnectionManager
@@ -82,25 +85,52 @@ class DeviceController:
     @classmethod
     async def get_device_with_deviceId(cls, db: AsyncSession, device_id: str):
         try:
-            query = select(Device).where(Device.id == device_id)
-            result = await db.execute(query)
-            device = result.scalar_one_or_none()
+            query = select(
+                Device,
+                Model.name.label("model_name"), # Model 的 name
+                Firmware.name.label("firmware_name") # Firmware 的 name
+            ).outerjoin(
+                Model, Device.current_model_id == Model.id
+            ).outerjoin(
+                Firmware, Device.firmware_id == Firmware.id
+            ).where(
+                Device.id==device_id
+            )
 
-            connection_state = ConnectionManager.get_device_connection_state(device_id=str(device.id))
-            if connection_state:
-                device.status = connection_state
-            else:
-                device.status = "disconnected"
+            print(query)
+            result = await db.execute(query)
+            row = result.first()
             
-            return { 
-                "success": True,
-                "data": {
-                    "devices": [device]
-                },
-                "message": "Get device with deviceID sucessfully."
-            }
+            if row:
+                device = row[0]
+                device.model_name = row.model_name
+                device.firmware_name = row.firmware_name
+
+                connection_state = ConnectionManager.get_device_connection_state(device_id=str(device.id))
+                if connection_state:
+                    device.status = connection_state
+                else:
+                    device.status = "disconnected"
+                
+                return { 
+                    "success": True,
+                    "data": {
+                        "devices": [device]
+                    },
+                    "message": "Get device with deviceID sucessfully."
+                }
+            
+            else:
+                return { 
+                    "success": False,
+                    "data": {
+                        "devices": []
+                    },
+                    "message": f"Device with ID {device_id} not found."
+                }
 
         except SQLAlchemyError as e:
+            print(traceback.format_exc())
             await db.rollback()
             raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
             
@@ -112,24 +142,22 @@ class DeviceController:
     @classmethod
     async def firmware_deployment(cls, db: AsyncSession, user_id: str, device_id: str, firmware_id: str):
         try:
-            # Make sure device exist
+            # Make sure device, firmware exist
             query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
             result = await db.execute(query)
             device = result.scalar_one_or_none()
-
             if device is None:
                 print("Dvice not found, raise Error")
 
-            # Make sure firmware exist
             query = select(Firmware).where(Firmware.id == firmware_id ).where(Firmware.user_id == user_id).where(Firmware.deleted_time == None)
             result = await db.execute(query)
             firmware = result.scalar_one_or_none()
-
             if firmware is None:
                 print("Firmware not found, raise Error")
 
             task_params = {
                 "firmware_id": firmware_id,
+                "firmware_name": firmware.name,
                 "download_path":  f"http://192.168.1.102:8000/api/device/ota/{user_id}/{firmware_id}"
             }
             await ConnectionManager.send_task_to_device(user_id=user_id, device_id=device_id, task="OTA", task_params=task_params)
@@ -270,16 +298,22 @@ class DeviceController:
     @classmethod
     async def model_switch(cls, db: AsyncSession, user_id: str, device_id: str, model_id: str):
         try:
-            # Make sure device exist
+            # Make sure device and model exist
             query = select(Device).where(Device.id == device_id).where(Device.user_id == user_id).where(Device.deleted_time == None)
             result = await db.execute(query)
             device = result.scalar_one_or_none()
-
             if device is None:
                 print("Dvice not found, raise Error")
 
+            query = select(Model).where(Model.id == model_id).where(Model.user_id == user_id).where(Model.deleted_time == None)
+            result = await db.execute(query)
+            model = result.scalar_one_or_none()
+            if model is None:
+                print("Model not found, raise Error")
+
             task_params = {
                 "model_id": model_id,
+                "model_name": model.name
             }
             await ConnectionManager.send_task_to_device(user_id=user_id, device_id=device_id, task="MODEL_SWITCH", task_params=task_params)
 

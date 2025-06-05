@@ -65,7 +65,7 @@ const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } :
         <p className="text-sm text-gray-600">MAC: {device.mac}</p>
         
         {/* Device firmware version */}
-        <p className="text-sm text-gray-600">Version: {device.version || "developed"}</p>
+        <p className="text-sm text-gray-600">Firmware Version: {device.firmware_name ?? "N/A"}</p>
     
     </div>
   );

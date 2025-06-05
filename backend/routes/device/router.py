@@ -146,10 +146,10 @@ async def model_switch(params: ReqeustScheme.ModeSwtichParams, device_id: str, d
 
 
 @router.post("/model/deployment")
-async def model_deploy(params: ReqeustScheme.ModelDeploymentParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user) ):
+async def model_deploy(params: ReqeustScheme.ModelDeploymentParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
     return await DeviceController.model_deploy(db=db, user_id=current_user.get('user_id', None), device_id=params.device_id, model_id=params.model_id)
 
 
 @router.get("/model_switch/{device_id}/{model_id}")
-async def model_download(device_id: str, model_id:str, db: AsyncSession = Depends(get_db)):
-    return await DeviceController.model_switch(db=db, user_id="6e837227-93b7-461b-bc73-caa9828b7f26", device_id=device_id, model_id=model_id)
+async def model_download(device_id: str, model_id:str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return await DeviceController.model_switch(db=db, user_id=current_user.get('user_id', None), device_id=device_id, model_id=model_id)

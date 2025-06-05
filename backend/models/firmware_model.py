@@ -1,6 +1,7 @@
 import uuid
 from models.base_model import Base
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String, UUID, DateTime, ForeignKey
 
 class Firmware(Base):
@@ -13,3 +14,5 @@ class Firmware(Base):
     created_time = Column(DateTime, nullable=False, server_default=func.now())
     updated_time = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     deleted_time = Column(DateTime, nullable=True)
+
+    devices_using_this_firmware = relationship("Device", foreign_keys="[Device.firmware_id]", back_populates="firmware")

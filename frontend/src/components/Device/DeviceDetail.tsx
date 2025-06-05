@@ -38,8 +38,8 @@ const DeviceDetail = () => {
               if(result.success){
                   setDevice(result.data.devices[0])
                   // Assuming device object might have an initial mode
-                  if (result.data.devices[0]?.currentMode) {
-                    setActiveMode(result.data.devices[0].currentMode);
+                  if (result.data.devices[0]?.operation_model) {
+                    setActiveMode(result.data.devices[0].operation_model);
                   }
               }else{
                   // Consider a more user-friendly notification system than alert()
@@ -68,12 +68,9 @@ const DeviceDetail = () => {
         if(device?.busy_reason==="MODE_SWITCH" && message.mode){
           setActiveMode(message.mode);
           setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
-        }else if(device?.busy_reason==="MODEL_SWITCH" && message.model_id){
-          setDevice(prev => prev ? { ...prev, status: "connected", current_model_id: message.model_id ?? prev.current_model_id } : prev);
-        }else if(device?.busy_reason==="MODEL_DOWNLOAD" && message.model_id){
-          setDevice(prev => prev ? { ...prev, status: "connected", current_model_id: message.model_id ?? prev.current_model_id } : prev);
-        }else if(device?.busy_reason==="OTA" && message.firmware_id){
-          setDevice(prev => prev ? { ...prev, status: "connected", firmware_id: message.firmware_id ?? prev.firmware_id } : prev);
+        }else if(device?.busy_reason==="MODEL_SWITCH" && message.model_name){
+          console.log("Model name: ", message.model_name);
+          setDevice(prev => prev ? { ...prev, status: "connected", model_name: message.model_name ?? prev.model_name } : prev);
         }else{
           setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
         }
@@ -138,7 +135,7 @@ const DeviceDetail = () => {
 
           {/* Left Column: Device Info & Logs */}
           <div className="lg:col-span-2 flex flex-col space-y-6">
-            <DeviceInfo device={device} />
+            <DeviceInfo device={device} setDevice={setDevice} />
 
             {/* Device Log */}
             <DeviceLog />

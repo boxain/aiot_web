@@ -9,7 +9,9 @@ export interface Device {
   version: string;
   user_id: string;
   current_model_id: string;
+  model_name: string;
   firmware_id: string;
+  firmware_name: string;
   description: string;
 }
 
@@ -21,6 +23,7 @@ export interface DeviceCardProps {
 }
 
 export interface FirmwareSelectionProps {
+  setDevices: Dispatch<SetStateAction<Device[]>>;
   selectedDevices: string[];
   showSelectFirmware: boolean;
   setShowSelectFirmware: Dispatch<SetStateAction<boolean>>;
@@ -35,7 +38,8 @@ export interface ModelSelectionProps {
 }
 
 export interface DeviceInfoProps {
-  device: Device
+  device: Device;
+  setDevice: Dispatch<SetStateAction<Device|null>>;
 }
 
 export interface SwitchButtonProps {
@@ -61,8 +65,8 @@ export interface InferenceSectionProps {
 }
 
 export interface ModelSwitchProps {
-  device_id: string;
-  model_id: string;
+  device: Device;
+  setDevice: Dispatch<SetStateAction<Device|null>>;
   showSwitchModel: boolean;
   setShowSwitchModel: Dispatch<SetStateAction<boolean>>;
 }

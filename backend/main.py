@@ -45,15 +45,18 @@ app.include_router(model_router, prefix="/api/model", tags=["model"])
 
 if __name__ == '__main__':
     # https://myapollo.com.tw/blog/begin-to-asyncio/#google_vignette
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=False, workers=1, ws_ping_interval=600, log_level="debug")
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, workers=1, ws_ping_interval=600, log_level="debug")
 
 '''
 Web Version 1.0
-3. 前端 busy 狀態防呆         --- (06/04)
-5. task completed db update  --- (06/03)
-6. 頁面美化                   --- (06/04)
-7. 首頁更新                   --- (06/04)
-8. Log 實現                   --- (06/04)
+1. delete protection
+2. 前端 busy 狀態防呆        
+3. 頁面美化                   
+4. 首頁更新                  
+
+1. Log 實現 
+2. Error handler
+3. Error message
 '''
 
 '''

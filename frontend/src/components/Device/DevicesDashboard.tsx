@@ -52,11 +52,17 @@ const DevicesDashboard = () => {
 
         if (message.action === "CONNECTED") {
             setDevices(prev =>
-                prev.map(device =>
-                    device.id === message.device_id
-                        ? { ...device, status: "connected" }
-                        : device
-                )
+                prev.map(device => {
+                    if(device.id === message.device_id){
+                        if(device.busy_reason==="OTA" && message.firmware_name){
+                            return { ...device, status: "connected", firmware_name: message.firmware_name }
+                        }else{
+                            return { ...device, status: "connected" }
+                        }
+                    }else{
+                        return device
+                    }
+                })
             );
         } else if (message.action === "DISCONNECTED") {
             setDevices(prev =>
@@ -219,6 +225,7 @@ const DevicesDashboard = () => {
             {/* Firmware Selection Dashboard */}
             {showSelectFirmware && (
                 <FirmwareSelection 
+                    setDevices={setDevices}
                     selectedDevices={selectedDevices}
                     showSelectFirmware={showSelectFirmware} 
                     setShowSelectFirmware={setShowSelectFirmware} 

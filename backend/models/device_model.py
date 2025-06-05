@@ -18,4 +18,6 @@ class Device(Base):
     updated_time = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     deleted_time = Column(DateTime, nullable=True)
     
+    firmware = relationship("Firmware", foreign_keys=[firmware_id], back_populates="devices_using_this_firmware")
+    current_model = relationship("Model", foreign_keys=[current_model_id], back_populates="devices_using_as_current_model")
     device_model_relations = relationship("DeviceModelRelation", back_populates="device")
