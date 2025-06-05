@@ -226,7 +226,10 @@ class ConnectionManager:
                             print(f"{log_id} - status *COMPLETED*")
                             cls.set_device_connection_state(device_id=device_id, task_id=task_id, connection_state="connected", task_status=TaskStatus.COMPLETED)
                             cls.device_info(device_id=device_id)
-                            await cls.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="COMPLETED")
+                            task_info = cls.get_device_task(device_id=device_id, task_id=task_id)
+                            if task_info:
+                                await device_update_callback(db, user_id, device_id, task_info)
+                                await cls.active_frontend_task(user_id=user_id, task="OTA", type="text", device_id=device_id, status="COMPLETED", firmware_id=task_info["params"]["firmware_id"])
 
                         elif status == "ERROR":
                             print(f"{log_id} - status *ERROR*")
@@ -248,8 +251,11 @@ class ConnectionManager:
                             print(f"{log_id} - status *COMPLETED*")
                             cls.set_device_connection_state(device_id=device_id, task_id=task_id, connection_state="connected", task_status=TaskStatus.COMPLETED)
                             cls.device_info(device_id=device_id)
-                            await cls.active_frontend_task(user_id=user_id, task="MODEL_DOWNLOAD", type="text", device_id=device_id, status="COMPLETED")
-                            # await DeviceController.model_operational_mode_update(db=db, user_id=user_id, device_id=device_id)
+                            task_info = cls.get_device_task(device_id=device_id, task_id=task_id)
+                            if task_info:
+                                await device_update_callback(db, user_id, device_id, task_info)
+                                await cls.active_frontend_task(user_id=user_id, task="MODEL_DOWNLOAD", type="text", device_id=device_id, status="COMPLETED", firmware_id=task_info["params"]["model_id"])
+
 
                         elif status == "ERROR":
                             print(f"{log_id} - status *ERROR*")
@@ -271,8 +277,10 @@ class ConnectionManager:
                             print(f"{log_id} - status *COMPLETED*")
                             cls.set_device_connection_state(device_id=device_id, task_id=task_id, connection_state="connected", task_status=TaskStatus.COMPLETED)
                             cls.device_info(device_id=device_id)
-                            await cls.active_frontend_task(user_id=user_id, task="MODEL_SWITCH", type="text", device_id=device_id, status="COMPLETED")
-                            # await DeviceController.model_operational_mode_update(db=db, user_id=user_id, device_id=device_id)
+                            task_info = cls.get_device_task(device_id=device_id, task_id=task_id)
+                            if task_info:
+                                await device_update_callback(db, user_id, device_id, task_info)
+                                await cls.active_frontend_task(user_id=user_id, task="MODEL_SWITCH", type="text", device_id=device_id, status="COMPLETED", firmware_id=task_info["params"]["model_id"])
 
                         elif status == "ERROR":
                             print(f"{log_id} - status *ERROR*")

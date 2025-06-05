@@ -1,7 +1,8 @@
 import uuid
 from models.base_model import Base
 from sqlalchemy.sql import func
-from sqlalchemy import Column, String, UUID, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, UUID, DateTime, ForeignKey
 
 class DeviceModelRelation(Base):
     __tablename__ = 'device_to_model'
@@ -11,3 +12,6 @@ class DeviceModelRelation(Base):
     created_time = Column(DateTime, nullable=False, server_default=func.now())
     updated_time = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
     deleted_time = Column(DateTime, nullable=True)
+
+    device = relationship("Device", back_populates="device_model_relations")
+    model = relationship("Model", back_populates="device_model_relations_to_devices")

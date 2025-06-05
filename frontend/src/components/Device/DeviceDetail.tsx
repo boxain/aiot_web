@@ -65,9 +65,17 @@ const DeviceDetail = () => {
 
       if(message.device_id !== id) return;
       if (message.action === "CONNECTED") {
-        setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
         if(device?.busy_reason==="MODE_SWITCH" && message.mode){
           setActiveMode(message.mode);
+          setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
+        }else if(device?.busy_reason==="MODEL_SWITCH" && message.model_id){
+          setDevice(prev => prev ? { ...prev, status: "connected", current_model_id: message.model_id ?? prev.current_model_id } : prev);
+        }else if(device?.busy_reason==="MODEL_DOWNLOAD" && message.model_id){
+          setDevice(prev => prev ? { ...prev, status: "connected", current_model_id: message.model_id ?? prev.current_model_id } : prev);
+        }else if(device?.busy_reason==="OTA" && message.firmware_id){
+          setDevice(prev => prev ? { ...prev, status: "connected", firmware_id: message.firmware_id ?? prev.firmware_id } : prev);
+        }else{
+          setDevice(prev => prev ? { ...prev, status: "connected" } : prev);
         }
 
       } else if (message.action === "DISCONNECTED") {

@@ -84,7 +84,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
                             }else if(data.action === "OTA"){
 
-                                const { device_id, status } = data;
+                                const { device_id, status, firmware_id } = data;
                                 console.log(`OTA status: ${status} for device: ${device_id}`);
                                 if(status === "RECEIVED"){
                                     setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
@@ -103,8 +103,33 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                                 }else if(status === "COMPLETED"){
                                     setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, mode}]);
                                 }else if(status === "ERROR"){
-                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, mode}]);
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
                                 }
+
+                            }else if(data.action === "MODEL_DOWNLOAD"){
+
+                                const { device_id, status, model_id } = data;
+                                console.log(`MODEL_DOWNLOAD status: ${status} for device: ${device_id}`);
+                                if(status === "RECEIVED"){
+                                    setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
+                                }else if(status === "COMPLETED"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, model_id}]);
+                                }else if(status === "ERROR"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                }
+
+                            }else if(data.action === "MODEL_SWITCH"){
+
+                                const { device_id, status, model_id } = data;
+                                console.log(`MODEL_SWITCH status: ${status} for device: ${device_id}`);
+                                if(status === "RECEIVED"){
+                                    setStateQueue(prev => [...prev, { action: "BUSY", device_id}]);
+                                }else if(status === "COMPLETED"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id, model_id}]);
+                                }else if(status === "ERROR"){
+                                    setStateQueue(prev => [...prev, { action: "CONNECTED", device_id}]);
+                                }
+
                             }else if(data.action === "INFERENCE_RESULT"){
                                 
                                 const { device_id, image_data } = data;

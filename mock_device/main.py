@@ -40,7 +40,31 @@ async def inference_task(delay: int):
     return text_response, image_bytes
 
 
-async def simple_websocket_client(uri):
+async def model_download_task(task_id: str, status: str, delay: int):
+    print(f'MODEL DOWNLOAD - status: {status}, delay: {delay}')
+    await asyncio.sleep(delay=delay)
+
+    response = {
+        "action": "MODEL_DOWNLOAD",
+        "task_id": task_id,
+        "status": status,
+    }
+    return response
+
+
+async def model_switch_task(task_id: str, status: str, delay: int):
+    print(f'MODEL SWITCH - status: {status}, delay: {delay}')
+    await asyncio.sleep(delay=delay)
+
+    response = {
+        "action": "MODEL_SWITCH",
+        "task_id": task_id,
+        "status": status,
+    }
+    return response
+
+
+async def websocket_client(uri):
     try:
       
         async with websockets.connect(uri) as websocket:
@@ -75,6 +99,31 @@ async def simple_websocket_client(uri):
                         await websocket.send(json.dumps(response))
                         print("End MODE_SWITCH Task")
                         print("="*30)
+
+                    elif action == "MODEL_DOWNLOAD":
+                        print("="*30)
+                        print("Start MODEL_DOWNLOAD Task")
+                        print("Received mesage: ", data)
+                        task_id = data.get("task_id", None)
+                        response = await model_download_task(task_id=task_id, status="RECEIVED", delay=3)
+                        await websocket.send(json.dumps(response))
+                        response = await model_download_task(task_id=task_id, status="COMPLETED", delay=5)
+                        await websocket.send(json.dumps(response))
+                        print("End MODEL_DOWNLOAD Task")
+                        print("="*30)
+
+                    elif action == "MODEL_SWITCH":
+                        print("="*30)
+                        print("Start MODEL_SWITCH Task")
+                        print("Received mesage: ", data)
+                        task_id = data.get("task_id", None)
+                        response = await model_switch_task(task_id=task_id, status="RECEIVED", delay=3)
+                        await websocket.send(json.dumps(response))
+                        response = await model_switch_task(task_id=task_id, status="COMPLETED", delay=5)
+                        await websocket.send(json.dumps(response))
+                        print("End MODEL_SWITCH Task")
+                        print("="*30)
+
 
                     elif action == "INFERENCE":
                         print("="*30)
@@ -123,4 +172,4 @@ if __name__ == "__main__":
 
     server_uri=f"{protocal}://{domain}:{port}/api/device/ws/{user_id}/{mac_id}"
     
-    asyncio.run(simple_websocket_client(server_uri))
+    asyncio.run(websocket_client(server_uri))

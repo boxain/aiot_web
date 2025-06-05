@@ -85,6 +85,37 @@ class ModelController:
 
 
     @classmethod
+    async def get_models_by_device_id(cls, db: AsyncSession, user_id: str, device_id: str):
+        try:
+
+            query = (
+                select(Model)
+                .join(DeviceModelRelation, DeviceModelRelation.model_id == Model.id)
+                .where(DeviceModelRelation.device_id == device_id)
+                .where(Model.user_id == user_id)
+                .where(Model.deleted_time == None)
+            )
+
+            result = await db.execute(query)
+            models = result.scalars().all()
+
+            return { 
+                "success": True,
+                "data": {
+                    "models": models
+                },
+                "message": "Get models sucessfully."
+            }
+
+
+        except SQLAlchemyError as e:
+            raise GeneralExc.DatabaseError(message="Get models failed.", details=str(e))
+        
+        except Exception as e:
+            raise GeneralExc.UnknownError(message="Get models failed.", details=str(e))
+
+
+    @classmethod
     async def delete_model(cls, db: AsyncSession, model_id: str, user_id: str):
         try:
 

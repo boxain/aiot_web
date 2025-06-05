@@ -59,3 +59,10 @@ export interface InferenceSectionProps {
   isInference: boolean;
   setIsInference: Dispatch<SetStateAction<boolean>>;
 }
+
+export interface ModelSwitchProps {
+  device_id: string;
+  model_id: string;
+  showSwitchModel: boolean;
+  setShowSwitchModel: Dispatch<SetStateAction<boolean>>;
+}

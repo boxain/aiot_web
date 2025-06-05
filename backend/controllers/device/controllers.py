@@ -7,6 +7,7 @@ from sqlalchemy import select, update
 
 from models.device_model import Device
 from models.firmware_model import Firmware
+from models.device_to_model_model import DeviceModelRelation
 import routes.device.request_schema as ReqeustSchema
 from utils.connection_manage import ConnectionManager
 import utils.exception as GeneralExc
@@ -247,7 +248,7 @@ class DeviceController:
 
             task_params = {
                 "model_id": model_id,
-                 "download_path": f"http://192.168.1.103:8000/api/model/download/{user_id}/{model_id}"
+                "download_path": f"http://192.168.1.103:8000/api/model/download/{user_id}/{model_id}"
             }
 
             await ConnectionManager.send_task_to_device(user_id=user_id, device_id=device_id, task="MODEL_DOWNLOAD", task_params=task_params)
@@ -300,36 +301,35 @@ class DeviceController:
     async def task_completion_update(cls, db: AsyncSession, user_id: str, device_id: str, task_info: dict):
         try:
             update_values = {}
-            print("task_info: ", task_info)
             task_name = task_info["name"]
-            if task_name == "MODE_SWITCH":
-                update_values["operation_model"] = task_info["params"]["mode"]
-            elif task_name == "OTA":
-                update_values["firmware_id"] = task_info["params"]["firmware_id"]
-            elif task_name == "MODEL_SWITCH":
-                update_values["current_model_id"] = task_info["params"]["model_id"]
-            elif task_name == "MODEL_DOWNLOAD":
-                print("Add record")
+            # result = None
+            print("task_info: ", task_info)
 
+            if task_name == "MODEL_DOWNLOAD":
+                device_model_relation = DeviceModelRelation(**{"device_id": device_id, "model_id": task_info["params"]["model_id"]})
+                db.add(device_model_relation)
+                await db.commit()
 
-            query = update(Device)                         \
-                .where(Device.id == device_id)             \
-                .where(Device.user_id == user_id)          \
-                .values(update_values)
-            result = await db.execute(query)
-            await db.commit()
+            else: 
+                if task_name == "MODE_SWITCH":
+                    update_values["operation_model"] = task_info["params"]["mode"]
+                elif task_name == "OTA":
+                    update_values["firmware_id"] = task_info["params"]["firmware_id"]
+                elif task_name == "MODEL_SWITCH":
+                    update_values["current_model_id"] = task_info["params"]["model_id"]
+
+                query = update(Device)                         \
+                    .where(Device.id == device_id)             \
+                    .where(Device.user_id == user_id)          \
+                    .values(update_values)
+                await db.execute(query)
+                await db.commit()
             
-            affected_rows = result.rowcount
+            # affected_rows = result.rowcount
+            # if affected_rows == 0 :
+            #     print("Dvice not found, raise Error")
+            # print("affected_rows: ", affected_rows)
 
-            if affected_rows == 0 :
-                print("Dvice not found, raise Error")
-
-            print("affected_rows: ", affected_rows)
-
-            return { 
-                "success": True,
-                "message": "Model operational mode update success!"
-            }
 
         except SQLAlchemyError as e:
             await db.rollback()

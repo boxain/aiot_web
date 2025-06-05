@@ -69,4 +69,5 @@ Version 2.0
 1. MQTT
 2. Notification
 3. QR code provisioning
+4. HTTPs
 '''
