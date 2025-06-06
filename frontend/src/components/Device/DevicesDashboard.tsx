@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 import { useWs } from '@/context/WebSocketContext';
 import DeviceCard from '@/components/device/DeviceCard';
@@ -11,11 +11,13 @@ import getDevicesAPI from '@/api/device/getDevicesAPI';
 import AddDeviceForm from '@/components/device/AddDeviceForm';
 import FirmwareSelection from '@/components/device/FirmwareSelection';
 import ModelSelection from '@/components/device/ModelSelection';
+import deleteDevicesAPI from '@/api/device/deleteDeviceAPI';
 
 const DevicesDashboard = () => {
     const { stateQueue, setStateQueue } = useWs();
     const [devices, setDevices] = useState<Device[]>([]);
     const [isGetDevices, setIsGetDevices ] = useState(true);
+    const [isDeleteingDevices, setIsDeleteingDevices] = useState(false);
     const [showAddDeviceForm, setShowAddDeviceForm] = useState(false);
     const [isSelectDevice, setIsSelectDevice] = useState(false);
     const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
@@ -140,6 +142,101 @@ const DevicesDashboard = () => {
     };
 
 
+    /**
+     * Send delete device API
+     */
+    const handleDeleteSelectedDevices = async () => {
+        if(isDeleteingDevices)return;
+        
+        try{
+        setIsDeleteingDevices(true);
+        const result = await deleteDevicesAPI(selectedDevices);
+        if(result.success){
+            alert("Delete devices success !");
+            setDevices((prev) => prev.filter((device => !selectedDevices.includes(device.id))));
+            cancleSelectDeviceMode();
+        }else{
+            alert("Delete devices failed....");
+        }
+        }finally{
+            setIsDeleteingDevices(false)
+        }
+    }
+
+
+    /**
+     * Depend on is select device mode or not to return different button list
+     */
+    const buttonList = () => {
+        if(isSelectDevice){
+            return (
+                <>
+                    {/* (OTA/Model Deploy) confirm button */}
+                    {(selectedType === "Firmware" || selectedType === "Model") && (
+                        <button
+                            onClick={openSelectionDashboard}
+                            className={`flex items-center justify-center px-4 py-2 text-white text-sm rounded ${checkSelectDeviceLength() ? "bg-green-500 hover:bg-green-700" : "bg-gray-500"}`}
+                            disabled={!checkSelectDeviceLength()}
+                        >
+                            <Plus className='w-4 h-4 mr-1' />
+                            <div>Confirm {selectedType}</div>
+                        </button>
+                    )}
+
+                    {/* Delete confirm button */}
+                    {selectedType === "Delete" && (
+                        <button
+                            onClick={handleDeleteSelectedDevices}
+                            className={`flex items-center justify-center px-4 py-2 text-white text-sm rounded ${checkSelectDeviceLength() ? "bg-red-500 hover:bg-red-700" : "bg-gray-500"}`}
+                            disabled={!checkSelectDeviceLength()}
+                        >
+                            <Trash2 className='w-4 h-4 mr-1' />
+                            <div>Confirm Delete</div>
+                        </button>
+                    )}
+
+                    {/* Cancel confirm button */}
+                    <button
+                        onClick={cancleSelectDeviceMode}
+                        className="flex items-center justify-center px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-700"
+                    >
+                        <Trash2 className='w-4 h-4 mr-1' /> {/* 或其他合適圖示 */}
+                        <div>Cancel</div>
+                    </button>
+                </>
+            )
+        }else{
+            return (
+                <>
+                    <button
+                        onClick={()=>{openSelectDeviceMode("Firmware")}}
+                        className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                    >
+                        <Plus className='w-4 h-4' />
+                        <div>Firmware Update</div>
+                    </button>
+
+                    <button
+                        onClick={()=>{openSelectDeviceMode("Model")}}
+                        className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                    >
+                        <Plus className='w-4 h-4' />
+                        <div>Model Deploy</div>
+                    </button>
+
+                    <button
+                        onClick={()=>{openSelectDeviceMode("Delete")}}
+                        className="flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                    >
+                        <Trash2 className='w-4 h-4 mr-1' />
+                        <div>Delete Devices</div>
+                    </button>
+                </>
+            )
+        }
+    }
+
+
     if(isGetDevices){
         return <Loading />
     }
@@ -149,64 +246,16 @@ const DevicesDashboard = () => {
         <>
             {/* Button List */}
             <div className='flex items-center gap-x-4  mb-6'>
-                {
-                    isSelectDevice ? 
-                    (
-                        <>
-                            <button
-                                onClick={openSelectionDashboard}
-                                className={`flex items-center justify-center px-4 py-2  text-white text-sm rounded  ${checkSelectDeviceLength() ? "bg-green-500 hover:bg-green-700" : "bg-gray-500"}`}
-                                disabled={!checkSelectDeviceLength()}
-                            >
-                                <Plus className='w-4 h-4' />
-                                <div>Confirm</div>
-                            </button>
-
-                            <button
-                                onClick={cancleSelectDeviceMode}
-                                className="flex items-center justify-center px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-700"
-                            >
-                                <Plus className='w-4 h-4' />
-                                <div>Cancel</div>
-                            </button>
-                        </>
-                    ):
-                    (
-                        <>
-                            {/* <button
-                                onClick={handleAddDeviceClick}
-                                className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                            >
-                                <Plus className='w-4 h-4' />
-                                <div>Add New Device</div>
-                            </button> */}
-
-                            <button
-                                onClick={()=>{openSelectDeviceMode("Firmware")}}
-                                className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                            >
-                                <Plus className='w-4 h-4' />
-                                <div>Firmware Update</div>
-                            </button>
-
-                            <button
-                                onClick={()=>{openSelectDeviceMode("Model")}}
-                                className="flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                            >
-                                <Plus className='w-4 h-4' />
-                                <div>Model Deploy</div>
-                            </button>
-                        </>
-                    )
-                }
+                {buttonList()}
             </div>
 
             {/* Device List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {devices.map((device, index) => (
+                {devices.map((device) => (
                     <DeviceCard 
-                        key={index} 
+                        key={device.id} 
                         device={device}
+                        selectedType={selectedType}
                         isSelected={selectedDevices.includes(device.id)}
                         isSelectDevice={isSelectDevice} 
                         setSelectedDevices={setSelectedDevices} 

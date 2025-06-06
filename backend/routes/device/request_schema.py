@@ -20,3 +20,6 @@ class ModeEnum(str, Enum):
 
 class ModeSwtichParams(BaseModel):
     mode: ModeEnum
+
+class DeleteManyDeviceParams(BaseModel):
+    device_ids: list[str]

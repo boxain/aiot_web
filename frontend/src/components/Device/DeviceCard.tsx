@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Camera } from "lucide-react";
 import { Device, DeviceCardProps } from "@/components/device/types"
 
-const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } : DeviceCardProps) => {
+const DeviceCard = ({ device, selectedType, isSelectDevice, setSelectedDevices, isSelected } : DeviceCardProps) => {
   
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const deviceId = device.id; 
@@ -41,15 +41,23 @@ const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } :
      return device.status === "connected";
   }
 
+  const showMask = () => {
+    return isSelectDevice && device.status !== "connected" && selectedType !== "Delete"
+  }
+
+  const showCheckBox = () => {
+    return (isSelectDevice && device.status === "connected") || (isSelectDevice && selectedType == "Delete")
+  }
+
   return (
-    <div className={`bg-white rounded-lg shadow-md p-4 ${isSelectDevice && !checkDeviceState() && "bg-black opacity-50"}`}>
+    <div className={`bg-white rounded-lg shadow-md p-4 ${showMask() && "bg-black opacity-50"}`}>
         
         {/* Device status */}
         <div className='flex items-center justify-between'>
           <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block mb-2 ${statusCSSColor()}`}>
             {device.status}
           </div>
-          { isSelectDevice && checkDeviceState() &&
+          { showCheckBox() &&
             <input 
               type='checkbox' 
               checked={isSelected}

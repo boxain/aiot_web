@@ -17,6 +17,7 @@ export interface Device {
 
 export interface DeviceCardProps {
   device: Device;
+  selectedType: string;
   isSelectDevice: boolean;
   isSelected: boolean;
   setSelectedDevices: Dispatch<SetStateAction<string[]>>;

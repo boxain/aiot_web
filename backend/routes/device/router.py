@@ -26,12 +26,18 @@ async def create_device(params: ReqeustScheme.CreateDeviceParams, db: AsyncSessi
 
 @router.get("/")
 async def get_devices(db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return await DeviceController.get_devices(db=db)
+    return await DeviceController.get_devices(db=db, user_id=current_user.get('user_id', None))
 
 
 @router.get("/{device_id}")
 async def get_device_with_id(device_id: str, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return await DeviceController.get_device_with_deviceId(db=db, device_id=device_id)
+    return await DeviceController.get_device_with_deviceId(db=db, device_id=device_id, user_id=current_user.get('user_id', None))
+
+
+@router.post("/delete-many")
+async def delete_device(params: ReqeustScheme.DeleteManyDeviceParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
+    return await DeviceController.delete_device(db=db, device_ids=params.device_ids, user_id=current_user.get('user_id', None))
+
 
 
 @router.websocket("/ws/{user_id}/{mac}")

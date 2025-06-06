@@ -22,7 +22,7 @@ class DeviceController:
     async def create_device(cls, db: AsyncSession, user_id: str, mac: str):
         try:
 
-            query = select(Device.id).where(Device.mac == mac)
+            query = select(Device.id).where(Device.mac == mac).where(Device.deleted_time == None)
             result = await db.execute(query)
             device_id = result.scalar_one_or_none()
             if device_id:
@@ -54,9 +54,9 @@ class DeviceController:
 
 
     @classmethod
-    async def get_devices(cls, db: AsyncSession):
+    async def get_devices(cls, db: AsyncSession, user_id: str):
         try:
-            query = select(Device)
+            query = select(Device).where(Device.user_id == user_id).where(Device.deleted_time == None)
             result = await db.execute(query)
             devices = result.scalars().all()
 
@@ -83,7 +83,7 @@ class DeviceController:
 
 
     @classmethod
-    async def get_device_with_deviceId(cls, db: AsyncSession, device_id: str):
+    async def get_device_with_deviceId(cls, db: AsyncSession, device_id: str, user_id: str):
         try:
             query = select(
                 Device,
@@ -95,6 +95,10 @@ class DeviceController:
                 Firmware, Device.firmware_id == Firmware.id
             ).where(
                 Device.id==device_id
+            ).where(
+                Device.deleted_time == None
+            ).where(
+                Device.user_id == user_id
             )
 
             print(query)
@@ -137,6 +141,31 @@ class DeviceController:
         except Exception as e:
             await db.rollback()
             raise GeneralExc.DatabaseError(message="Get device with deviceID failed.", details=str(e))
+
+
+    @classmethod
+    async def delete_device(cls, db: AsyncSession, device_ids: list[str], user_id: str):
+        try:
+            query = update(Device)                           \
+                .where(Device.id.in_(device_ids))            \
+                .where(Device.user_id == user_id)            \
+                .values(deleted_time=datetime.now())
+            
+            result = await db.execute(query)
+            affected_rows = result.rowcount
+            print("affected_rows: ", affected_rows)
+            return { 
+                "success": True,
+                "message": "Delete device sucessfully."
+            }
+
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise GeneralExc.DatabaseError(message=f"Delete device failed.", details=str(e))
+        
+        except Exception as e:
+            db.rollback()
+            raise GeneralExc.UnknownError(message=f"Delete device failed.", details=str(e))
 
 
     @classmethod
