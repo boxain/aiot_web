@@ -6,6 +6,7 @@ import SwitchPageButtom from '@/components/SwitchPageButtom';
 import DevicesDashboard from '@/components/device/DevicesDashboard';
 
 
+
 export default function DevicePage() {
   return (
     <>

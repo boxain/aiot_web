@@ -202,7 +202,6 @@ const AddModelForm: React.FC<AddModelFormProps> = ({ onClose, setModels }) => {
             </button>
           </div>
 
-
           {/* --- File Upload Input --- */}
           <div>
             {modelFile &&
