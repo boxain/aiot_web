@@ -8,6 +8,7 @@ import { Model } from '@/components/model/types';
 import { ModelSwitchProps } from '@/components/device/types';
 import getModelsWithDeviceIdAPI from '@/api/model/getModelsWithDeviceIdAPI';
 import modelSwitchAPI from '@/api/device/modelSwitchAPI';
+import Loading from '@/components/Loading';
 
 
 const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelected: boolean; onSelect: (id: string) => void; }) => {  
@@ -93,7 +94,6 @@ const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelect
     );
 };
 
-
 const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitchModel, setShowSwitchModel }) => {
     const [models, setModels] = useState<Model[]>([]);
     const [isGetModels, setIsGetModels ] = useState(true);
@@ -127,11 +127,18 @@ const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitch
 
     }, [])
 
+
+    /**
+    * Close model selection form
+    */
     const handleCancelClick = () => {
         setSelectedModelId(null); 
         setShowSwitchModel(false);
     };
 
+    /**
+    * Submit model switch API
+    */
     const handleConfirmClick = async () => {
         if(isDeploymentUpdate) return;
         if(!selectedModelId) return;
@@ -160,6 +167,28 @@ const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitch
         }
     };
 
+
+    /**
+    * Check device status is connected or not
+    */
+    const checkIsCanSubmit = () => {
+        if(!selectedModelId || device.status !== "connected" || selectedModelId === device.current_model_id){
+            return false
+        }else{
+            return true
+        }
+    }
+
+
+    const confirmButtonSyle = () => {
+        if(checkIsCanSubmit()){
+            return "bg-green-600 hover:bg-green-700 cursor-pointer"
+        }else{
+            return "bg-gray-400 cursor-not-allowed"
+        }
+    }
+    
+    
     return (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50">
             <div className={`fixed bottom-0 left-0 right-0 z-20 h-[400px] transition-transform duration-500 ease-in-out ${showSwitchModel ? "translate-y-0" : "translate-y-full"}`}>
@@ -172,8 +201,8 @@ const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitch
                         <div className="flex gap-x-2">
                             <button
                                 onClick={handleConfirmClick}
-                                disabled={!selectedModelId}
-                                className={`flex items-center justify-center px-3 py-2 text-white text-xs sm:text-sm rounded-md ${ selectedModelId ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'} transition-colors duration-150`}
+                                disabled={!checkIsCanSubmit()}
+                                className={`flex items-center justify-center px-3 py-2 text-white text-xs sm:text-sm rounded-md ${confirmButtonSyle()} transition-colors duration-150`}
                             >
                                 <Check className="w-4 h-4 sm:mr-1" />
                                 <span className="hidden sm:inline">Confirm</span>
@@ -213,7 +242,6 @@ const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitch
                         )}
 
                     </div>
-
                 </div>
             </div>
         </div>

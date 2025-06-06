@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import traceback
+import asyncio
 from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
@@ -88,7 +89,7 @@ class ModelController:
     @classmethod
     async def get_models_by_device_id(cls, db: AsyncSession, user_id: str, device_id: str):
         try:
-
+            # await asyncio.sleep(5)
             query = (
                 select(Model)
                 .join(DeviceModelRelation, DeviceModelRelation.model_id == Model.id)

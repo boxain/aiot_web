@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Camera } from "lucide-react";
-import { DeviceCardProps } from "@/components/device/types"
+import { Device, DeviceCardProps } from "@/components/device/types"
 
 const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } : DeviceCardProps) => {
   
@@ -18,6 +18,7 @@ const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } :
       }
         return prevSelectedDevices;
     });
+
   };
 
   const statusCSSColor = () => {
@@ -33,15 +34,22 @@ const DeviceCard = ({ device, isSelectDevice, setSelectedDevices, isSelected } :
     }
   }
 
+  /**
+   * Check device status is connected or not
+   */
+  const checkDeviceState = () => {
+     return device.status === "connected";
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
+    <div className={`bg-white rounded-lg shadow-md p-4 ${isSelectDevice && !checkDeviceState() && "bg-black opacity-50"}`}>
         
         {/* Device status */}
         <div className='flex items-center justify-between'>
           <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block mb-2 ${statusCSSColor()}`}>
             {device.status}
           </div>
-          { isSelectDevice && 
+          { isSelectDevice && checkDeviceState() &&
             <input 
               type='checkbox' 
               checked={isSelected}

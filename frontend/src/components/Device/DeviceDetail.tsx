@@ -149,7 +149,7 @@ const DeviceDetail = () => {
               <h2 className="text-xl font-semibold text-gray-700 mb-1 flex items-center">
                 Real-time Inference
               </h2>
-              <InferenceSection device_id={id} activeMode={activeMode} isInference={isInference} setIsInference={setIsInference} />
+              <InferenceSection device_id={id} device_status={device.status} activeMode={activeMode} isInference={isInference} setIsInference={setIsInference} />
             </div>
 
             {/* Mode Switching & Restart Controls */}
@@ -160,7 +160,7 @@ const DeviceDetail = () => {
               </h2>
               
               <SwitchButton device={device} setDevice={setDevice} activeMode={activeMode} setActiveMode={setActiveMode} isSwitchMode={isSwitchMode} setIsSwitchMode={setIsSwitchMode} />  
-              <ResetButton id={id} isResetDevice={isResetDevice} setIsResetDevice={setIsResetDevice} />
+              <ResetButton device_id={id} device_status={device.status} isResetDevice={isResetDevice} setIsResetDevice={setIsResetDevice} />
             </div>
 
           </div>

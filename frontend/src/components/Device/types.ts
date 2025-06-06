@@ -52,13 +52,15 @@ export interface SwitchButtonProps {
 }
 
 export interface ResetButtonProps {
-  id: string;
+  device_id: string;
+  device_status: "connected" | "disconnected" | "busy";
   isResetDevice: boolean;
   setIsResetDevice: Dispatch<SetStateAction<boolean>>;
 }
 
 export interface InferenceSectionProps {
   device_id: string;
+  device_status: "connected" | "disconnected" | "busy";
   activeMode: string;
   isInference: boolean;
   setIsInference: Dispatch<SetStateAction<boolean>>;

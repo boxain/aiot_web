@@ -3,7 +3,7 @@ import { ResetButtonProps } from "@/components/device/types";
 import resetDeviceAPI from '@/api/device/restartDeviceAPI';
 
 
-const ResetButton: React.FC<ResetButtonProps> = ({ id , isResetDevice, setIsResetDevice }) => {
+const ResetButton: React.FC<ResetButtonProps> = ({ device_id , device_status, isResetDevice, setIsResetDevice }) => {
 
     const handleRestart = async () => {
         if(isResetDevice) return;
@@ -13,7 +13,7 @@ const ResetButton: React.FC<ResetButtonProps> = ({ id , isResetDevice, setIsRese
         }
         setIsResetDevice(true);
         try{
-            const result = await resetDeviceAPI(id);
+            const result = await resetDeviceAPI(device_id);
             if(result.success){
                 // Add success notification
                 alert("Device restarting...");
@@ -27,10 +27,19 @@ const ResetButton: React.FC<ResetButtonProps> = ({ id , isResetDevice, setIsRese
     };
 
 
+    const checkIsCanReset = () => {
+        if(!isResetDevice && device_status === "connected"){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
     return (
         <button
             onClick={handleRestart}
-            disabled={isResetDevice}
+            disabled={!checkIsCanReset()}
             className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-200 ease-in-out group
                 bg-red-500 text-white hover:bg-red-600 focus:ring-4 focus:ring-red-300 shadow-md hover:shadow-lg
                 disabled:bg-red-300 disabled:cursor-not-allowed disabled:opacity-70

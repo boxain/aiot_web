@@ -4,7 +4,7 @@ import { ImageIcon } from "lucide-react";
 import { InferenceSectionProps } from "@/components/device/types";
 import inferenceAPI from "@/api/device/inferenceAPI";
 
-const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, activeMode, isInference, setIsInference }) => {
+const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, device_status, activeMode, isInference, setIsInference }) => {
     const { deviceImages, setDeviceImages } = useWs();
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [lastInferenceText, setLastInferenceText] = useState<string>("Waiting for inference data..."); // For inference text
@@ -56,6 +56,23 @@ const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, activeMo
     };
 
 
+    /**
+    * Check device can inference or not
+    */
+    const checkIsCanLiverInference = () => {
+        return activeMode === "STAND_BY_MODE" && device_status === "connected";
+    }
+
+
+    const inferenceButtonSylte = () => {
+        if(checkIsCanLiverInference()){
+            return "hover:scale-105 border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-600 cursor-pointer"
+        }else{
+            return "border-gray-300 bg-gray-50 cursor-not-allowed"
+        }
+    }
+
+
     return (
         <> 
             <div className="w-full aspect-video flex items-center justify-center bg-gray-200 rounded-lg text-gray-500 overflow-hidden">
@@ -70,9 +87,9 @@ const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, activeMo
             <p className="text-sm text-gray-600 font-medium text-center py-2 bg-gray-50 rounded-md">{lastInferenceText}</p>
             <button 
                 className={`w-full py-4 px-2 text-base font-medium text-center rounded-lg border-2 transition-all duration-200 ease-in-out transform
-                ${activeMode === "STAND_BY_MODE" ? "hover:scale-105 border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 text-gray-600 hover:text-blue-600 cursor-pointer":
-                    "border-gray-300 bg-gray-50 cursor-not-allowed"}`}
+                ${inferenceButtonSylte()}`}
                 onClick={handleLiveInference}
+                disabled={!checkIsCanLiverInference()}
             >
                 Live Inference
             </button>
