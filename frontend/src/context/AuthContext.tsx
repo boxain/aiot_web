@@ -71,6 +71,9 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
 
     const logout = () => {
         setUser(null);
+        Cookies.remove("access_token")
+        Cookies.remove("token_type")
+        router.push("/user/login")
     }
 
     return (

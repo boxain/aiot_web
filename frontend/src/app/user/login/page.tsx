@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 
@@ -8,10 +9,17 @@ import { useAuth } from '@/context/AuthContext';
 import loginAPI from '@/api/user/login';
 
 export default function Login() {
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [isSignIn, setIsSignIn] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        if(user){
+            router.push("/device")
+        }
+    }, [])
 
     const handleSubmit = async () => {
         

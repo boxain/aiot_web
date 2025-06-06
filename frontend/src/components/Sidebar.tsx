@@ -1,9 +1,11 @@
 import { User, Settings, LogOut } from "lucide-react"
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
+
 
 const Sidebar = () => {
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
 
   return (
@@ -27,14 +29,14 @@ const Sidebar = () => {
 
       {/* Settings and Logout */}
       <div className="mt-auto space-y-2 w-full">
-          <a href="#" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-blue-700 rounded-lg transition-colors">
+          <div className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-blue-700 rounded-lg transition-colors">
               <Settings className="w-5 h-5 mr-3"/>
               Settings
-          </a>
-          <a href="#" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-blue-700 rounded-lg transition-colors">
+          </div>
+          <div className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-blue-700 rounded-lg transition-colors" onClick={logout}>
               <LogOut className="w-5 h-5 mr-3"/>
               Logout
-          </a>
+          </div>
       </div>
       
     </div>
