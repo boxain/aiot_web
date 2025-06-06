@@ -1,14 +1,11 @@
 "use client"
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-
+  const router = useRouter()
+  router.push("/device")
   return (
-    <>
-      {/* Title */}
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Home</h1>
-      <Link href={"/device"}>Device</Link>
-    </>
+    <></>
   );
 }

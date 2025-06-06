@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from models.firmware_model import Firmware
+from models.device_model import Device
 from utils.config_manage import ConfigManage
 import utils.exception as GeneralExc
 
@@ -82,6 +83,20 @@ class FirmwareController:
     @classmethod
     async def delete_firmware(cls, db: AsyncSession, firmware_id: str, user_id: str):
         try:
+            # check is firmware be deployed on the device
+            query = select(Device)                           \
+                .where(Device.firmware_id == firmware_id)    \
+                .where(Device.deleted_time == None)
+            
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+            if device:
+                print(f"Error: Firmware has been used on the device: {device.id}")
+                return { 
+                    "success": False,
+                    "message": "Delete firmware failed."
+                }
+
 
             query = update(Firmware)                         \
                 .where(Firmware.id == firmware_id)           \

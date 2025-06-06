@@ -49,10 +49,9 @@ if __name__ == '__main__':
 
 '''
 Web Version 1.0
-1. delete protection
-2. 前端 busy 狀態防呆        
-3. 頁面美化                   
-4. 首頁更新                  
+1. 新增刪除device
+2. 前端 busy 狀態防呆       
+3. 頁面美化         
 
 1. Log 實現 
 2. Error handler

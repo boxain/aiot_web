@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from models.model_model import Model
+from models.device_model import Device
 from models.device_to_model_model import DeviceModelRelation
 from utils.config_manage import ConfigManage
 import utils.exception as GeneralExc
@@ -118,6 +119,22 @@ class ModelController:
     @classmethod
     async def delete_model(cls, db: AsyncSession, model_id: str, user_id: str):
         try:
+
+
+            query = select(Device)                             \
+                .where(Device.current_model_id == model_id)    \
+                .where(Device.deleted_time == None)
+            
+            result = await db.execute(query)
+            device = result.scalar_one_or_none()
+            if device:
+                print(f"Error: Model has been used on the device: {device.id}")
+                return { 
+                    "success": False,
+                    "message": "Delete model failed."
+                }
+            
+
 
             query = update(Model)                         \
                 .where(Model.id == model_id)              \
