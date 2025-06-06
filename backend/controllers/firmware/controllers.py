@@ -5,6 +5,7 @@ import traceback
 from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
@@ -118,3 +119,26 @@ class FirmwareController:
         except Exception as e:
             db.rollback()
             raise GeneralExc.UnknownError(message=f"Delete firmware with {firmware_id} failed.", details=str(e))
+        
+
+
+    @classmethod
+    async def download_firmware(cls, db: AsyncSession, user_id: str, firmware_id: str):
+        try:
+
+            query = select(Firmware).where(Firmware.user_id == user_id).where(Firmware.id == firmware_id).where(Firmware.deleted_time == None)
+            result = await db.execute(query)
+            firmware = result.scalar_one_or_none()
+
+            if firmware is None:
+                print(f"Error: firmware {firmware_id} does not exist.")
+            else:
+                path = firmware.file_path
+                return FileResponse(path)
+
+        except SQLAlchemyError as e:
+            raise GeneralExc.DatabaseError(message="Get firmwares failed.", details=str(e))
+        
+        except Exception as e:
+            raise GeneralExc.UnknownError(message="Get firmwares failed.", details=str(e))
+

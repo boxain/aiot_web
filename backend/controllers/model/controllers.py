@@ -6,6 +6,7 @@ import asyncio
 from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
@@ -29,7 +30,7 @@ class ModelController:
             directory = f"{ConfigManage.STORAGE_PATH}/models/{user_id}/"
             file_path = f"{directory}{model_id}.{file_extension}"
             
-            model = Model(name=name, description=description, user_id=user_id, model_type=model_type, labels=parsed_labels, file_path=file_path)
+            model = Model(id=model_id, name=name, description=description, user_id=user_id, model_type=model_type, labels=parsed_labels, file_path=file_path)
             db.add(model)
             await db.commit()
             await db.refresh(model)
@@ -155,3 +156,24 @@ class ModelController:
         except Exception as e:
             db.rollback()
             raise GeneralExc.UnknownError(message=f"Delete firmware with {model_id} failed.", details=str(e))
+        
+
+    @classmethod
+    async def download_model(cls, db: AsyncSession, model_id, user_id: str):
+        try:
+
+            query = select(Model).where(Model.user_id == user_id).where(Model.id == model_id).where(Model.deleted_time == None)
+            result = await db.execute(query)
+            model = result.scalar_one_or_none()
+
+            if model is None:
+                print(f"Error: Model {model_id} does not exist.")
+            else:
+                path = model.file_path
+                return FileResponse(path)
+
+        except SQLAlchemyError as e:
+            raise GeneralExc.DatabaseError(message="Get models failed.", details=str(e))
+        
+        except Exception as e:
+            raise GeneralExc.UnknownError(message="Get models failed.", details=str(e))

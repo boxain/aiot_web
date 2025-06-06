@@ -5,7 +5,6 @@ import traceback
 import asyncio
 from PIL import Image, ImageDraw
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.responses import FileResponse
 from starlette.websockets import WebSocketState 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketException, Depends
 
@@ -37,7 +36,6 @@ async def get_device_with_id(device_id: str, db: AsyncSession = Depends(get_db),
 @router.post("/delete-many")
 async def delete_device(params: ReqeustScheme.DeleteManyDeviceParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
     return await DeviceController.delete_device(db=db, device_ids=params.device_ids, user_id=current_user.get('user_id', None))
-
 
 
 @router.websocket("/ws/{user_id}/{mac}")
@@ -122,13 +120,6 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
             print(f"[{log_id}] process_task was already done.")
         
         print(f"[{log_id}] WebSocket cleanup complete.")
-
-
-# 換到 firmware route
-@router.get("/ota/{user_id}/{firmware_id}")
-async def ota_update(user_id: str, firmware_id: str, db: AsyncSession = Depends(get_db)):
-    firmware_path = "firmware/version_1.bin"
-    return FileResponse(firmware_path)
 
 
 @router.post("/firmware/deployment")

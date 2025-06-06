@@ -49,14 +49,16 @@ if __name__ == '__main__':
 
 '''
 Web Version 1.0
-1. Log 實現 
-2. Error handler
-3. Error message
+1. Inference result label boxing
+2. domain env
+2. Log 實現 
+3. Error handler
+4. Error message
 '''
 
 '''
 Device Version 1.0
-1. task completed            
+1. 解決 Model download 與 OTA download 衝突問題        
 2. Model customizer
 3. log
 4. refactor

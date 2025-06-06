@@ -39,5 +39,4 @@ async def delete_model(model_id: str, db: AsyncSession = Depends(get_db), curren
 
 @router.get("/download/{user_id}/{model_id}")
 async def model_download(user_id: str, model_id: str, db: AsyncSession = Depends(get_db)):
-    firmware_path = "model/espdet_pico_416_416_cat.espdl"
-    return FileResponse(firmware_path)
+    return await ModelController.download_model(db=db, model_id=model_id, user_id=user_id)
