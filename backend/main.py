@@ -49,8 +49,6 @@ if __name__ == '__main__':
 
 '''
 Web Version 1.0
-1. 頁面美化          
-
 1. Log 實現 
 2. Error handler
 3. Error message

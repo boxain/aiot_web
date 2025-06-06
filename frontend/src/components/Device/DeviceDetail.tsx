@@ -2,7 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { AlertTriangle } from "lucide-react";
+import Link from 'next/link';
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 
 import { Device } from './types'; 
 import { useWs } from '@/context/WebSocketContext';
@@ -119,18 +120,25 @@ const DeviceDetail = () => {
       <div className='max-w-[1920px] mx-auto'>
 
         {/* Title */}
-        <div className="mb-8">
-          <div className='flex items-center gap-x-2'>
-            <h1 className="text-3xl font-bold text-gray-800">
-              Device: <span className="text-indigo-600">{device?.name}</span>
-            </h1>
-            <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block ${statusCSSColor()}`}>
-              {device.status}
+        <div className="mb-8">    
+            <Link href="/device">
+                <div className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors mb-2">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Devices Management
+                </div>
+            </Link>
+            <div className='flex items-center gap-x-2'>
+                <h1 className="text-3xl font-bold text-gray-800">
+                    Device: <span className="text-indigo-600">{device?.name}</span>
+                </h1>
+                <div className={`text-xs font-semibold text-white px-2 py-1 rounded-md inline-block ${statusCSSColor()}`}>
+                    {device.status}
+                </div>
             </div>
-          </div>
-          <p className="text-gray-500 mt-1">Manage and monitor your device in real-time.</p>
+            <p className="text-gray-500 mt-1">Manage and monitor your device in real-time.</p>
         </div>
 
+        {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
           {/* Left Column: Device Info & Logs */}
@@ -166,6 +174,7 @@ const DeviceDetail = () => {
           </div>
 
         </div>
+
       </div>
     </div>
   );
