@@ -49,8 +49,7 @@ if __name__ == '__main__':
 
 '''
 Web Version 1.0
-1. 新增刪除device   
-3. 頁面美化         
+1. 頁面美化          
 
 1. Log 實現 
 2. Error handler

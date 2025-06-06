@@ -120,8 +120,6 @@ class ModelController:
     @classmethod
     async def delete_model(cls, db: AsyncSession, model_id: str, user_id: str):
         try:
-
-
             query = select(Device)                             \
                 .where(Device.current_model_id == model_id)    \
                 .where(Device.deleted_time == None)

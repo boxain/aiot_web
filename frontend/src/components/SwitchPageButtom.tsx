@@ -31,9 +31,9 @@ const SwitchPageButtom = () => {
             <button className={`px-6 py-2 ${categoryCSS("/firmware")} font-bold rounded-md shadow cursor-pointer`} onClick={() => {updateCategory("/firmware")}}>
                 Firmware
             </button>
-            <button className={`px-6 py-2 ${categoryCSS("/edge")} font-bold rounded-md shadow cursor-pointer`} onClick={() => {updateCategory("/edge")}}>
+            {/* <button className={`px-6 py-2 ${categoryCSS("/edge")} font-bold rounded-md shadow cursor-pointer`} onClick={() => {updateCategory("/edge")}}>
                 Edge Server
-            </button>
+            </button> */}
         </div>
     )
 }

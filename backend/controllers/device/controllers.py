@@ -303,6 +303,18 @@ class DeviceController:
             if device is None:
                 print("Dvice not found, raise Error")
 
+            # Make sure device have not download this model before
+            query = select(DeviceModelRelation).where(DeviceModelRelation.device_id == device_id).where(DeviceModelRelation.model_id == model_id).where(DeviceModelRelation.deleted_time == None)
+            result = await db.execute(query)
+            relation_record = result.scalar_one_or_none()
+
+            if relation_record:
+                print(f"Device has already download the model: {model_id}")
+                return { 
+                    "success": False,
+                    "message": f"Device has already download the model: {model_id}"
+                }
+
             task_params = {
                 "model_id": model_id,
                 "download_path": f"http://192.168.1.103:8000/api/model/download/{user_id}/{model_id}"
