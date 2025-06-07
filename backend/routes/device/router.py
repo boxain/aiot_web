@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocketState 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketException, Depends
-
-
+from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
+import utils.exception as GeneralExc
 from utils.sql_manage import get_db
 import routes.device.request_schema as ReqeustScheme
 from controllers.device.controllers import DeviceController
@@ -19,8 +19,8 @@ from utils.connection_manage import ConnectionManager
 router = APIRouter()
 
 @router.post("/")
-async def create_device(params: ReqeustScheme.CreateDeviceParams, db: AsyncSession = Depends(get_db), current_user = Depends(UserController.get_current_user)):
-    return await DeviceController.create_device(db=db, params=params)
+async def create_device(params: ReqeustScheme.CreateDeviceParams, db: AsyncSession = Depends(get_db)):
+    return await DeviceController.create_device(db=db, device_name=params.name, processor=params.processor, mac=params.mac)
 
 
 @router.get("/")
@@ -38,16 +38,18 @@ async def delete_device(params: ReqeustScheme.DeleteManyDeviceParams, db: AsyncS
     return await DeviceController.delete_device(db=db, device_ids=params.device_ids, user_id=current_user.get('user_id', None))
 
 
-@router.websocket("/ws/{user_id}/{mac}")
-async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: AsyncSession = Depends(get_db)):
+@router.websocket("/ws")
+async def websocket_init(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
+    current_device = await UserController.get_current_device(websocket.headers["authorization"])
     text_queue = asyncio.Queue(maxsize=50)
     binary_queue = asyncio.Queue(maxsize=50)
     process_task = None
     device_id = None
+    user_id = None
 
     try:
-        device_id = await DeviceController.create_device(db=db, user_id=user_id, mac=mac)
-
+        device_id = current_device["device_id"]
+        user_id = current_device["user_id"]
         await websocket.accept()
         await ConnectionManager.connect_device(user_id=user_id , device_id=device_id, websocket=websocket)
         process_task = asyncio.create_task(ConnectionManager.listen_device_message(text_queue, binary_queue, db, user_id, device_id, DeviceController.task_completion_update))
@@ -72,6 +74,14 @@ async def websocket_init(user_id: str, mac: str, websocket: WebSocket, db: Async
     except WebSocketDisconnect:
         log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
         print(f"[{log_id}] WebSocket disconnected by client.")
+
+    except InvalidTokenError as e:
+        print(traceback.format_exc())
+        raise GeneralExc.InValidTokenError(details=str(e))
+
+    except ExpiredSignatureError as e:
+        print(traceback.format_exc())
+        raise GeneralExc.TokenExpiredError(details=str(e))
 
     except Exception as e:
         log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"

@@ -150,3 +150,51 @@ class UserController:
             await db.rollback()
             raise GeneralExc.UnknownError(message="register failed", details=str(e))
             
+    
+    @classmethod
+    async def device_authentication(cls, db: AsyncSession, username: str, password: str, device_id: str):
+        try:
+            user = await cls.authenticate_user(db=db, username=username, password=password)
+            payload = {
+                "user_id": str(user.id),
+                "username": user.name,
+                "email": user.email,
+                "device_id": device_id
+            }
+            
+            access_token_expires = timedelta(minutes=float(ConfigManage.ACCESS_TOKEN_EXPIRE_MINUTES))
+            access_token = cls.create_access_token(data=payload, expire_delta=access_token_expires)
+
+            return {
+                "success": True,
+                "data": payload,
+                "access_token": access_token,
+                "token_type": "bearer",
+                "message": "device authenticate sucessfully."
+            }
+        
+        except UserExc.AuthenticationError:
+            raise
+
+        except SQLAlchemyError as e:
+            raise GeneralExc.DatabaseError(message="login failed", details=str(e))
+
+        except Exception as e:
+            raise GeneralExc.UnknownError(message="login failed", details=str(e))
+    
+
+    @classmethod
+    async def get_current_device(cls, token: str = Depends(oauth2_scheme)):
+        try:
+            token = token.split("bearer ")[1]
+            payload = jwt.decode(jwt=token, key=ConfigManage.SECRET_KEY, algorithms=ConfigManage.ALGORITHM)
+            print("payload", payload)
+            return payload
+
+        except InvalidTokenError as e:
+            print(traceback.format_exc())
+            raise GeneralExc.InValidTokenError(details=str(e))
+
+        except ExpiredSignatureError as e:
+            print(traceback.format_exc())
+            raise GeneralExc.TokenExpiredError(details=str(e))

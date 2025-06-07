@@ -3,8 +3,8 @@ from enum import Enum
 
 class CreateDeviceParams(BaseModel):
     name: str
+    processor: str
     mac: str
-    description: str
 
 class FirmwareDeploymentParams(BaseModel):
     device_id: str

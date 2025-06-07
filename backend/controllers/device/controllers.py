@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-
+from controllers.user.controllers import UserController
 from models.device_model import Device
 from models.firmware_model import Firmware
 from models.model_model import Model
@@ -14,36 +14,51 @@ from models.device_to_model_model import DeviceModelRelation
 import routes.device.request_schema as ReqeustSchema
 from utils.connection_manage import ConnectionManager
 from utils.config_manage import ConfigManage
+import controllers.user.exception as UserExc
 import utils.exception as GeneralExc
 
 
 class DeviceController:
     
     @classmethod
-    async def create_device(cls, db: AsyncSession, user_id: str, mac: str):
+    async def create_device(cls, db: AsyncSession, device_name: str, processor: str, mac: str):
         try:
-
+            '''
+                1. username, password
+                2. update database
+            '''
+        
             query = select(Device.id).where(Device.mac == mac).where(Device.deleted_time == None)
             result = await db.execute(query)
             device_id = result.scalar_one_or_none()
             if device_id:
-                return str(device_id)
-            
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                device_auth = await UserController.device_authentication(db=db, username="aaron", password="123", device_id=str(device_id))
+                return {
+                    "success": device_auth.get("success", True),
+                    "access_token": f"{device_auth.get('token_type', '')} {device_auth.get('access_token', '')}"
+                }
+            else:
+                user_auth = await UserController.login(db=db, username="aaron", password="123")
+                device_dict = {
+                    "name": device_name,
+                    "mac": mac,
+                    "description": "",
+                    "user_id": user_auth.get("data", {}).get("user_id", None)
+                }
+                device = Device(**device_dict)
+                db.add(device)
+                await db.commit()
+                await db.refresh(device)
+                device_auth = await UserController.device_authentication(db=db, username="aaron", password="123", device_id=str(device.id))
+                return {
+                    "success": device_auth.get("success", True),
+                    "access_token": f"{device_auth.get('token_type', '')} {device_auth.get('access_token', '')}"
+                }
 
-            device_dict = {
-                "name": f"Device_{timestamp}",
-                "mac": mac,
-                "description": "",
-                "user_id": user_id
-            }
 
-            device = Device(**device_dict)
-            db.add(device)
-            await db.commit()
-            await db.refresh(device)
-            return str(device.id)
-
+        except UserExc.AuthenticationError:
+            await db.rollback()
+            raise
 
         except SQLAlchemyError as e:
             await db.rollback()
