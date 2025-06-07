@@ -13,7 +13,7 @@ class ConfigManage:
     # Server Config
     SERVER_HOST=os.getenv("SERVER_HOST")
     SERVER_PORT=os.getenv("SERVER_PORT")
-    SERVER_ADDRESS=os.getenv("SERVER_ADDRESS")
+    SERVER_DOMAIN=os.getenv("SERVER_DOMAIN")
 
     # Local Storage Config
     STORAGE_PATH=os.getenv("STORAGE_PATH")

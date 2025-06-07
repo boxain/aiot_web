@@ -13,6 +13,7 @@ from models.model_model import Model
 from models.device_to_model_model import DeviceModelRelation
 import routes.device.request_schema as ReqeustSchema
 from utils.connection_manage import ConnectionManager
+from utils.config_manage import ConfigManage
 import utils.exception as GeneralExc
 
 
@@ -187,7 +188,7 @@ class DeviceController:
             task_params = {
                 "firmware_id": firmware_id,
                 "firmware_name": firmware.name,
-                "download_path":  f"http://192.168.1.102:8000/api/firmware/download/{user_id}/{firmware_id}"
+                "download_path":  f"{ConfigManage.SERVER_DOMAIN}/api/firmware/download/{user_id}/{firmware_id}"
             }
             await ConnectionManager.send_task_to_device(user_id=user_id, device_id=device_id, task="OTA", task_params=task_params)
 
@@ -317,7 +318,7 @@ class DeviceController:
 
             task_params = {
                 "model_id": model_id,
-                "download_path": f"http://192.168.1.102:8000/api/model/download/{user_id}/{model_id}"
+                "download_path": f"{ConfigManage.SERVER_DOMAIN}/api/model/download/{user_id}/{model_id}"
             }
 
             await ConnectionManager.send_task_to_device(user_id=user_id, device_id=device_id, task="MODEL_DOWNLOAD", task_params=task_params)
