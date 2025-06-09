@@ -146,7 +146,7 @@ const DeviceDetail = () => {
             <DeviceInfo device={device} setDevice={setDevice} />
 
             {/* Device Log */}
-            <DeviceLog />
+            <DeviceLog device_id={device.id} />
           </div>
 
           {/* Right Column: Inference & Controls */}

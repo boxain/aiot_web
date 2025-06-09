@@ -49,10 +49,8 @@ if __name__ == '__main__':
 
 '''
 Web Version 1.0
-1. Inference result label boxing
-2. Log 實現 
-3. Error handler
-4. Error message
+1. Error handler
+2. Error message
 '''
 
 '''

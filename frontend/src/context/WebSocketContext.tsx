@@ -9,6 +9,8 @@ interface WebSocketContextType {
     setStateQueue: Dispatch<SetStateAction<ConnectionStateType[]>>; 
     deviceImages: Record<string, Blob[]>;
     setDeviceImages: Dispatch<SetStateAction<Record<string, Blob[]>>>;
+    deviceLogs: Record<string, DeviceLogType[]>;
+    setDeviceLogs: Dispatch<SetStateAction<Record<string, DeviceLogType[]>>>;
 }
 
 interface ConnectionStateType {
@@ -19,13 +21,20 @@ interface ConnectionStateType {
     firmware_name?: string;
 }
 
+export interface DeviceLogType {
+    level: "info" | "warning" | "error";
+    message: string;
+}
+
 const WebSocketContext = createContext<WebSocketContextType>({
     isConnected: false,
     status:"disconnected",
     stateQueue: [],
     setStateQueue: () => {},
     deviceImages: {},
-    setDeviceImages: () => {}
+    setDeviceImages: () => {},
+    deviceLogs: {},
+    setDeviceLogs: () => {}
 })
 
 
@@ -37,6 +46,7 @@ const base64ToBlob = async (base64Str: string, type: string = "image/jpeg") => {
 export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) => {
     
     const MAX_BUFFER_SIZE = 100;
+    const MAX_LOG_SIZE = 100;
     const ws = useRef<WebSocket | null>(null);
     const isMounted = useRef(true);
     const { user } = useAuth();
@@ -44,6 +54,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
     const [status, setStatus] = useState<string>("disconnected");
     const [stateQueue, setStateQueue] = useState<ConnectionStateType[]>([]);
     const [deviceImages, setDeviceImages] = useState<Record<string, Blob[]>>({});
+    const [deviceLogs, setDeviceLogs] = useState<Record<string, DeviceLogType[]>>({});
     
 
     useEffect(() => {
@@ -153,6 +164,21 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                                     console.error("Error converting Base64 to Blob:", e);
                                 }
                             
+                            }else if(data.action === "LOG"){
+
+                                const { device_id, level, message } = data;
+                                setDeviceLogs((prev) => {
+                                    const existingLogs = prev[device_id] || [];
+                                    const updatedLogs = [...existingLogs, { level, message}];
+                                    if(updatedLogs.length > MAX_LOG_SIZE){
+                                        updatedLogs.shift();
+                                    }
+                                    return {
+                                        ...prev,
+                                        [device_id]: updatedLogs
+                                    };
+                                })
+
                             }else{
                                 console.log("Not valid task");
                             }
@@ -163,17 +189,6 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                         }
 
                     }
-                    // else if(event.data instanceof Blob || event.data instanceof ArrayBuffer){
-                    //     console.log("Received Binary Data");
-                        
-                    //     let binaryBlob: Blob;
-                    //     if (event.data instanceof ArrayBuffer){
-                    //         binaryBlob = new Blob([event.data]);
-                    //     }else {
-                    //         binaryBlob = event.data;
-                    //     }
-                    //     setLastBinaryData(binaryBlob);
-                    // }
                 }
             }
     
@@ -208,7 +223,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
 
     return (
-        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, deviceImages, setDeviceImages}}>
+        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, deviceImages, setDeviceImages, deviceLogs, setDeviceLogs}}>
             {children}
         </WebSocketContext.Provider>
     )

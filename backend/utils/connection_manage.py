@@ -10,7 +10,6 @@ from fastapi import WebSocket
 from PIL import Image, ImageDraw, ImageFont
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-# from controllers.device.controllers import DeviceController
 
 
 class TaskStatus:
@@ -177,7 +176,7 @@ class ConnectionManager:
                     print("Error: The message doen't contain action")
                     continue
 
-                if(action != "INFERENCE_RESULT" and task_id is None):
+                if((action != "INFERENCE_RESULT" and action != "LOG") and task_id is None):
                     print("Error: The message doesn't contain task_id")
                     continue
 
@@ -187,6 +186,18 @@ class ConnectionManager:
 
                 
                 match action:
+                    case "LOG":
+                        log_id = f"{user_id}:{device_id}"
+                        print(f"{log_id} - Received LOG task.")
+                        if status == "COMPLETED":
+                            print(f"{log_id} - status *COMPLETED*")
+                            message = data.get("message", None)
+                            level = data.get("level", None)
+                            if message and level:
+                                await cls.active_frontend_task(user_id=user_id, task="LOG", type="text", device_id=device_id, status="COMPLETED", level=level, message=message)
+                            else:
+                                print("message or level is None")
+                            
                     case "MODE_SWITCH":
                         log_id = f"{user_id}:{device_id}"
                         print(f"{log_id} - Received MODE_SWITCH task.")

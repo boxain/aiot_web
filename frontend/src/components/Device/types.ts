@@ -43,6 +43,10 @@ export interface DeviceInfoProps {
   setDevice: Dispatch<SetStateAction<Device|null>>;
 }
 
+export interface DeviceLogsSectionProps {
+  device_id: string;
+}
+
 export interface SwitchButtonProps {
   device: Device;
   setDevice: Dispatch<SetStateAction<Device|null>>;
