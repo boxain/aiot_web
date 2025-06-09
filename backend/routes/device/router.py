@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.post("/")
 async def create_device(params: ReqeustScheme.CreateDeviceParams, db: AsyncSession = Depends(get_db)):
-    return await DeviceController.create_device(db=db, device_name=params.name, processor=params.processor, mac=params.mac)
+    return await DeviceController.create_device(db=db, user_name=params.user_name, password=params.password, device_name=params.name, processor=params.processor, mac=params.mac)
 
 
 @router.get("/")
@@ -72,7 +72,7 @@ async def websocket_init(websocket: WebSocket, db: AsyncSession = Depends(get_db
             
 
     except WebSocketDisconnect:
-        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
+        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}"
         print(f"[{log_id}] WebSocket disconnected by client.")
 
     except InvalidTokenError as e:
@@ -84,7 +84,7 @@ async def websocket_init(websocket: WebSocket, db: AsyncSession = Depends(get_db
         raise GeneralExc.TokenExpiredError(details=str(e))
 
     except Exception as e:
-        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
+        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}"
         print(f"[{log_id}] An unexpected error occurred in websocket_init: {type(e).__name__} - {e}")
         print(traceback.format_exc())
         # Attempt to close the WebSocket gracefully if it's not already closed by the exception.
@@ -97,7 +97,7 @@ async def websocket_init(websocket: WebSocket, db: AsyncSession = Depends(get_db
                  print(f"[{log_id}] Further exception during websocket.close() in error handler: {close_ex}")
 
     finally:
-        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}:{mac}"
+        log_id = f"{user_id}:{device_id}" if device_id else f"{user_id}"
         print(f"[{log_id}] Cleaning up resources for WebSocket connection...")
 
         if device_id:

@@ -21,7 +21,7 @@ import utils.exception as GeneralExc
 class DeviceController:
     
     @classmethod
-    async def create_device(cls, db: AsyncSession, device_name: str, processor: str, mac: str):
+    async def create_device(cls, db: AsyncSession, user_name: str, password: str, device_name: str, processor: str, mac: str):
         try:
             '''
                 1. username, password
@@ -32,13 +32,13 @@ class DeviceController:
             result = await db.execute(query)
             device_id = result.scalar_one_or_none()
             if device_id:
-                device_auth = await UserController.device_authentication(db=db, username="aaron", password="123", device_id=str(device_id))
+                device_auth = await UserController.device_authentication(db=db, username=user_name, password=password, device_id=str(device_id))
                 return {
                     "success": device_auth.get("success", True),
                     "access_token": f"{device_auth.get('token_type', '')} {device_auth.get('access_token', '')}"
                 }
             else:
-                user_auth = await UserController.login(db=db, username="aaron", password="123")
+                user_auth = await UserController.login(db=db, username=user_name, password=password)
                 device_dict = {
                     "name": device_name,
                     "mac": mac,
@@ -49,7 +49,7 @@ class DeviceController:
                 db.add(device)
                 await db.commit()
                 await db.refresh(device)
-                device_auth = await UserController.device_authentication(db=db, username="aaron", password="123", device_id=str(device.id))
+                device_auth = await UserController.device_authentication(db=db, username=user_name, password=password, device_id=str(device.id))
                 return {
                     "success": device_auth.get("success", True),
                     "access_token": f"{device_auth.get('token_type', '')} {device_auth.get('access_token', '')}"

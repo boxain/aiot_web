@@ -5,6 +5,8 @@ class CreateDeviceParams(BaseModel):
     name: str
     processor: str
     mac: str
+    user_name: str
+    password: str
 
 class FirmwareDeploymentParams(BaseModel):
     device_id: str

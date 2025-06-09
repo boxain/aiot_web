@@ -1,11 +1,13 @@
+import os
 import io
 import json
 import base64
 import asyncio
 import traceback
+import time
 from uuid import uuid4
 from fastapi import WebSocket
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 # from controllers.device.controllers import DeviceController
@@ -313,6 +315,7 @@ class ConnectionManager:
                             if not isinstance(inference_results, list):
                                 print(f"{device_id} Error: inference_results is not a list.")
                             
+                            print("inference_results: ", inference_results)
                             
                             print(f"{device_id} Processing image...")
                             image_stream = io.BytesIO(binary_mes)
@@ -321,18 +324,39 @@ class ConnectionManager:
                                 image = image.convert("RGB")
 
                             draw = ImageDraw.Draw(image)
+                            font = ImageFont.load_default()
+
                             for result in inference_results:
-                                print(f"Inference result category: {result.get('category', None)}, score: {result.get('score', None)}")
-                                if len(result["box"]) == 4:
-                                    left_up_x, left_up_y, right_down_x, right_down_y = map(int, result["box"])
+                                category = result.get('category', 'N/A')
+                                score = result.get('score', 0.0)
+                                box = result.get('box', [])
+
+                                print(f"Inference result category: {category}, score: {score}")
+                            
+                                if len(box) == 4:
+                                    left_up_x, left_up_y, right_down_x, right_down_y = map(int, box)
+                                
+                                    # 1. 繪製原始辨識框
                                     draw.rectangle(
                                         [(left_up_x, left_up_y), (right_down_x, right_down_y)],
                                         outline="red",
-                                        width=3
+                                        width=2
                                     )
+                                    
+                                    # 2. 顯示的文字
+                                    text = f"Category: {category}, Score: {score:.1%}"
+                                    
+                                    # 3. 在辨識框的左上角繪製文字
+                                    text_position = (left_up_x + 5, left_up_y + 5)
+                                    
+                                    # 為了讓文字更清晰，先畫一個小的背景矩形
+                                    text_bbox = draw.textbbox(text_position, text, font=font)
+                                    draw.rectangle(text_bbox, fill="red")
+                                    draw.text(text_position, text, fill="white", font=font)
+                                
                                 else:
-                                    print(f"[{device_id}] Warning: Invalid bounding box format: {result.get('box', None)}")
-                            
+                                    print(f"[{device_id}] Warning: Invalid bounding box format: {box}")
+                                               
                             output_stream = io.BytesIO()
                             image.save(output_stream, format="JPEG")
                             image_bytes_with_boxes = output_stream.getvalue()
