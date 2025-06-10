@@ -195,7 +195,7 @@ class ConnectionManager:
                     print("Error: The message doesn't contain task_id")
                     continue
 
-                if(status is None):
+                if(action != "LOG" and status is None):
                     print("Error: The message doesn't contain status")
                     continue
         
@@ -213,14 +213,12 @@ class ConnectionManager:
                     case "LOG":
                         log_id = f"{user_id}:{device_id}"
                         print(f"{log_id} - Received LOG task.")
-                        if status == "COMPLETED":
-                            print(f"{log_id} - status *COMPLETED*")
-                            message = data.get("message", None)
-                            level = data.get("level", None)
-                            if message and level:
-                                await cls.active_frontend_task(user_id=user_id, task="LOG", type="text", device_id=device_id, status="COMPLETED", level=level, message=message)
-                            else:
-                                print("message or level is None")
+                        message = data.get("message", None)
+                        level = data.get("level", None)
+                        if message and level:
+                            await cls.active_frontend_task(user_id=user_id, task="LOG", type="text", device_id=device_id, level=level, message=message)
+                        else:
+                            print("message or level is None")
        
                     case "MODE_SWITCH":
                         log_id = f"{user_id}:{device_id}"

@@ -17,11 +17,11 @@ const DeviceLog: React.FC<DeviceLogsSectionProps> = ({ device_id }) => {
 
     const logStyle = (level: string) => {
         switch (level) {
-            case "error":
+            case "ERROR":
                 return "text-red-400";
-            case "warning":
+            case "WARNING":
                 return "text-yellow-400";
-            case "event":
+            case "EVENT":
                 return "text-green-400";
             default:
                 return "text-blue-400";
