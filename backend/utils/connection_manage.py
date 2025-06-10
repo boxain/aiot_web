@@ -26,20 +26,22 @@ class ConnectionManager:
 
 
     @classmethod
-    async def connect_device(cls, user_id: str, device_id: str, websocket: WebSocket):
+    async def connect_device(cls, user_id: str, device_id: str, mode: str, model_id: str, websocket: WebSocket):
+
         if(device_id in cls.active_devices):
             del cls.active_devices[device_id]
             print(f"Removed existed device websocket connection due to new connection for device_id: {device_id}")
 
         cls.active_devices[device_id] = {
             "websocket": websocket,
-            "connection_state": "connected",
+            "connection_state": "busy",
             "user_id": user_id,
             "tasks": {}
         }
+        
         print(f"active devices: {cls.active_devices[device_id]}")
         print(f"Created websocket device connection, device_id: {device_id}")
-        await cls.active_frontend_task(user_id=user_id, task="CONNECTED", type="text", device_id=device_id)
+        await cls.send_init_to_device(device_id=device_id, init_params={ "mode": mode, "model_id": model_id })
 
 
     @classmethod
@@ -78,10 +80,13 @@ class ConnectionManager:
 
 
     @classmethod
-    def set_device_connection_state(cls, device_id: str, task_id: str, connection_state: str, task_status: str):
+    def set_device_connection_state(cls, device_id: str, task_id: str | None, connection_state: str, task_status: str | None):
         if(device_id in cls.active_devices):
-            cls.active_devices.get(device_id)["connection_state"] = connection_state
-            cls.active_devices.get(device_id)["tasks"][task_id]["status"] = task_status
+            if task_id and task_status:
+                cls.active_devices.get(device_id)["connection_state"] = connection_state
+                cls.active_devices.get(device_id)["tasks"][task_id]["status"] = task_status
+            else:
+                cls.active_devices.get(device_id)["connection_state"] = connection_state
             return device_id
         else:
             return None
@@ -107,6 +112,16 @@ class ConnectionManager:
                 await websocket_connection.send_bytes(message)
         else:
             print(f"Websocket connection doen't exist for user_id: {user_id}")  
+
+    
+    @classmethod
+    async def send_init_to_device(cls, device_id: str, init_params: Optional[Dict] = None):
+        print("params: ", init_params)
+        message = {
+            "action": "INIT",
+            **(init_params if init_params else {})
+        }
+        await cls.send_message_to_device(device_id, message)
 
 
     @classmethod
@@ -176,16 +191,25 @@ class ConnectionManager:
                     print("Error: The message doen't contain action")
                     continue
 
-                if((action != "INFERENCE_RESULT" and action != "LOG") and task_id is None):
+                if((action != "INFERENCE_RESULT" and action != "LOG" and action != "INIT") and task_id is None):
                     print("Error: The message doesn't contain task_id")
                     continue
 
                 if(status is None):
                     print("Error: The message doesn't contain status")
                     continue
-
-                
+        
                 match action:
+
+                    case "INIT":
+                        log_id = f"{user_id}:{device_id}"
+                        print(f"{log_id} - Received INIT task.")
+
+                        if status == "COMPLETED":
+                            print(f"{log_id} - status *COMPLETED*")
+                            cls.set_device_connection_state(device_id=device_id, connection_state="connected", task_id=None, task_status=None)
+                            await cls.active_frontend_task(user_id=user_id, task="CONNECTED", type="text", device_id=device_id)
+
                     case "LOG":
                         log_id = f"{user_id}:{device_id}"
                         print(f"{log_id} - Received LOG task.")
@@ -197,7 +221,7 @@ class ConnectionManager:
                                 await cls.active_frontend_task(user_id=user_id, task="LOG", type="text", device_id=device_id, status="COMPLETED", level=level, message=message)
                             else:
                                 print("message or level is None")
-                            
+       
                     case "MODE_SWITCH":
                         log_id = f"{user_id}:{device_id}"
                         print(f"{log_id} - Received MODE_SWITCH task.")

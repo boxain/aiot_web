@@ -49,16 +49,15 @@ if __name__ == '__main__':
 
 '''
 Web Version 1.0
-1. Error handler
-2. Error message
+1. Error handler --------- ( 6/11, 6/12 )
+2. Error message --------- ( 6/11, 6/12 )
 '''
 
 '''
 Device Version 1.0
-1. nvs       
-2. Model customizer
-3. log
-4. refactor
+1. Model customizer ------ ( 6/12 )
+2. log ------------------- ( 6/10 )
+3. refactor -------------- ( 6/11 )
 '''
 
 '''

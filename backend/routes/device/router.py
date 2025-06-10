@@ -50,8 +50,12 @@ async def websocket_init(websocket: WebSocket, db: AsyncSession = Depends(get_db
     try:
         device_id = current_device["device_id"]
         user_id = current_device["user_id"]
+        device = await DeviceController.get_device_with_deviceId(db=db, device_id=device_id, user_id=user_id)
+        mode = device["data"]["devices"][0].operation_model
+        model_id = str(device["data"]["devices"][0].current_model_id) if device["data"]["devices"][0].current_model_id else None
+
         await websocket.accept()
-        await ConnectionManager.connect_device(user_id=user_id , device_id=device_id, websocket=websocket)
+        await ConnectionManager.connect_device(user_id=user_id , device_id=device_id, model_id=model_id, mode=mode, websocket=websocket)
         process_task = asyncio.create_task(ConnectionManager.listen_device_message(text_queue, binary_queue, db, user_id, device_id, DeviceController.task_completion_update))
 
         while True:

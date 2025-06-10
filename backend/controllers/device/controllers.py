@@ -117,7 +117,6 @@ class DeviceController:
                 Device.user_id == user_id
             )
 
-            print(query)
             result = await db.execute(query)
             row = result.first()
             

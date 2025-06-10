@@ -6,6 +6,15 @@ import random
 import websockets
 
 
+async def init_task(status: str, delay: int):
+    print(f'INIT - status: {status}, delay: {delay}')
+    await asyncio.sleep(delay=delay)
+    return {
+        "action": "INIT",
+        "status": status,
+    }
+
+
 async def OTA_task(task_id: str, status: str, delay: int):
     print(f'OTA - status: {status}, delay: {delay}')
     await asyncio.sleep(delay=delay)
@@ -103,7 +112,11 @@ async def handle_received_messages(websocket):
             print("Received message: ", data)
             print("="*30)
 
-            if action == "OTA":
+            if action == "INIT":
+                response = await init_task(status="COMPLETED", delay=5)
+                await websocket.send(json.dumps(response))
+
+            elif action == "OTA":
                 task_id = data.get("task_id", None)
                 response = await OTA_task(task_id=task_id, status="RECEIVED", delay=3)
                 await websocket.send(json.dumps(response))
@@ -156,11 +169,11 @@ async def websocket_client(uri, token):
         async with websockets.connect(uri, extra_headers=headers) as websocket:
             print(f"Connection created: {uri}")
             receive_task = asyncio.create_task(handle_received_messages(websocket))
-            log_task = asyncio.create_task(send_periodic_logs(websocket))
+            # log_task = asyncio.create_task(send_periodic_logs(websocket))
 
             await asyncio.gather(
                 receive_task,
-                log_task
+                # log_task
             )
 
     except ConnectionRefusedError:
