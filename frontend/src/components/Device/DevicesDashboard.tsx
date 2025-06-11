@@ -14,7 +14,7 @@ import ModelSelection from '@/components/device/ModelSelection';
 import deleteDevicesAPI from '@/api/device/deleteDeviceAPI';
 
 const DevicesDashboard = () => {
-    const { stateQueue, setStateQueue } = useWs();
+    const { stateQueue, setStateQueue, newDevices, setNewDevices } = useWs();
     const [devices, setDevices] = useState<Device[]>([]);
     const [isGetDevices, setIsGetDevices ] = useState(true);
     const [isDeleteingDevices, setIsDeleteingDevices] = useState(false);
@@ -80,6 +80,17 @@ const DevicesDashboard = () => {
         }
         setStateQueue(prev => prev.slice(1));
     }, [stateQueue])
+
+
+    useEffect(() => {
+        if (!newDevices.length) return;
+        const device = newDevices[0];
+        console.log("new device: ", device);
+        
+        setDevices(prev => [...prev, device])
+        setNewDevices(prev => prev.slice(1));
+    }, [newDevices])
+
 
     /**
      * Handle add new device submit

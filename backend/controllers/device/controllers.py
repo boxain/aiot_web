@@ -1,4 +1,5 @@
 import time
+import json
 import traceback
 from datetime import datetime
 from sqlalchemy import select, update
@@ -8,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from controllers.user.controllers import UserController
-from models.device_model import Device
+from models.device_model import Device, DeviceSchema
 from models.firmware_model import Firmware
 from models.model_model import Model
 from models.device_to_model_model import DeviceModelRelation
@@ -35,19 +36,26 @@ class DeviceController:
                 }
             else:
                 user_auth = await UserController.login(db=db, username=user_name, password=password)
+                user_id = user_auth.get("data", {}).get("user_id", None)
                 formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                 device_name = f"{chip}-{formatted_time}"
+
                 device_dict = {
                     "name": device_name,
                     "chip": chip,
                     "mac": mac,
                     "description": "",
-                    "user_id": user_auth.get("data", {}).get("user_id", None)
+                    "user_id": user_id
                 }
+
                 device = Device(**device_dict)
                 db.add(device)
                 await db.commit()
                 await db.refresh(device)
+                
+                device_pydantic_obj = DeviceSchema.model_validate(device, from_attributes=True)
+                device_data = json.loads(device_pydantic_obj.model_dump_json()) 
+                await ConnectionManager.active_frontend_task(user_id=user_id, type="text", task="NEW_DEVICE", device=device_data)
                 device_auth = await UserController.device_authentication(db=db, username=user_name, password=password, device_id=str(device.id))
                 return {
                     "success": device_auth.get("success", True),

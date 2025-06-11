@@ -1,8 +1,18 @@
 import uuid
+from pydantic import BaseModel
 from models.base_model import Base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String, UUID,  DateTime, ForeignKey
+
+
+class DeviceSchema(BaseModel):
+    id: uuid.UUID
+    name: str
+    mac: str
+    # class Config:
+    #     from_attributes = True
+
 
 class Device(Base):
     __tablename__ = 'devices'
@@ -22,3 +32,5 @@ class Device(Base):
     firmware = relationship("Firmware", foreign_keys=[firmware_id], back_populates="devices_using_this_firmware")
     current_model = relationship("Model", foreign_keys=[current_model_id], back_populates="devices_using_as_current_model")
     device_model_relations = relationship("DeviceModelRelation", back_populates="device")
+
+

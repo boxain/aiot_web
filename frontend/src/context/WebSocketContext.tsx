@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useContext, createContext, ReactNode, Dispatch, SetStateAction } from "react";
 import { useAuth } from "./AuthContext";
+import { Device } from "@/components/device/types";
 
 
 interface WebSocketContextType {
@@ -11,6 +12,8 @@ interface WebSocketContextType {
     setDeviceImages: Dispatch<SetStateAction<Record<string, Blob[]>>>;
     deviceLogs: Record<string, DeviceLogType[]>;
     setDeviceLogs: Dispatch<SetStateAction<Record<string, DeviceLogType[]>>>;
+    newDevices: Device[];
+    setNewDevices: Dispatch<SetStateAction<Device[]>>;
 }
 
 interface ConnectionStateType {
@@ -34,7 +37,9 @@ const WebSocketContext = createContext<WebSocketContextType>({
     deviceImages: {},
     setDeviceImages: () => {},
     deviceLogs: {},
-    setDeviceLogs: () => {}
+    setDeviceLogs: () => {},
+    newDevices: [],
+    setNewDevices: () => {}
 })
 
 
@@ -52,6 +57,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
     const { user } = useAuth();
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [status, setStatus] = useState<string>("disconnected");
+    const [newDevices, setNewDevices] = useState<Device[]>([]);
     const [stateQueue, setStateQueue] = useState<ConnectionStateType[]>([]);
     const [deviceImages, setDeviceImages] = useState<Record<string, Blob[]>>({});
     const [deviceLogs, setDeviceLogs] = useState<Record<string, DeviceLogType[]>>({});
@@ -83,7 +89,9 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
                     if(typeof event.data === "string") {
                         try{
                             const data = JSON.parse(event.data)
-                            if(data.action === "CONNECTED"){
+                            if(data.action === "NEW_DEVICE"){
+                                setNewDevices(prev => [...prev, {...data.device, status: "disconnected"}]);
+                            }else if(data.action === "CONNECTED"){
 
                                 console.log("connected device: ", data.device_id);
                                 setStateQueue(prev => [...prev, data]);
@@ -223,7 +231,7 @@ export const WebSocketProvider: React.FC<{children: ReactNode}> = ({children}) =
 
 
     return (
-        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, deviceImages, setDeviceImages, deviceLogs, setDeviceLogs}}>
+        <WebSocketContext.Provider value={{isConnected, status, stateQueue, setStateQueue, deviceImages, setDeviceImages, deviceLogs, setDeviceLogs, newDevices, setNewDevices}}>
             {children}
         </WebSocketContext.Provider>
     )

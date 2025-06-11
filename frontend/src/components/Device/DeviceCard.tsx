@@ -3,7 +3,7 @@ import { Camera } from "lucide-react";
 import { Device, DeviceCardProps } from "@/components/device/types"
 
 const DeviceCard = ({ device, selectedType, isSelectDevice, setSelectedDevices, isSelected } : DeviceCardProps) => {
-  
+
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const deviceId = device.id; 
     const isChecked = event.target.checked;
