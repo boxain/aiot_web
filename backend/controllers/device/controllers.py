@@ -1,3 +1,4 @@
+import time
 import traceback
 from datetime import datetime
 from sqlalchemy import select, update
@@ -21,13 +22,8 @@ import utils.exception as GeneralExc
 class DeviceController:
     
     @classmethod
-    async def create_device(cls, db: AsyncSession, user_name: str, password: str, device_name: str, processor: str, mac: str):
+    async def create_device(cls, db: AsyncSession, user_name: str, password: str, chip: str, mac: str):
         try:
-            '''
-                1. username, password
-                2. update database
-            '''
-        
             query = select(Device.id).where(Device.mac == mac).where(Device.deleted_time == None)
             result = await db.execute(query)
             device_id = result.scalar_one_or_none()
@@ -39,8 +35,11 @@ class DeviceController:
                 }
             else:
                 user_auth = await UserController.login(db=db, username=user_name, password=password)
+                formatted_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                device_name = f"{chip}-{formatted_time}"
                 device_dict = {
                     "name": device_name,
+                    "chip": chip,
                     "mac": mac,
                     "description": "",
                     "user_id": user_auth.get("data", {}).get("user_id", None)

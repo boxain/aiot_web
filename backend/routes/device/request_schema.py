@@ -2,8 +2,7 @@ from pydantic import BaseModel
 from enum import Enum
 
 class CreateDeviceParams(BaseModel):
-    name: str
-    processor: str
+    chip: str
     mac: str
     user_name: str
     password: str

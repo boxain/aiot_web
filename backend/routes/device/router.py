@@ -20,7 +20,8 @@ router = APIRouter()
 
 @router.post("/")
 async def create_device(params: ReqeustScheme.CreateDeviceParams, db: AsyncSession = Depends(get_db)):
-    return await DeviceController.create_device(db=db, user_name=params.user_name, password=params.password, device_name=params.name, processor=params.processor, mac=params.mac)
+    # Need to change to temporary token
+    return await DeviceController.create_device(db=db, user_name=params.user_name, password=params.password, chip=params.chip, mac=params.mac)
 
 
 @router.get("/")

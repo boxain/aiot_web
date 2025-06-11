@@ -4,6 +4,7 @@ export interface Device {
   id: string;
   name: string;
   mac: string;
+  chip: string;
   status: "connected" | "disconnected" | "busy";
   busy_reason: "MODE_SWITCH" | "OTA" | "MODEL_SWITCH" | "MODEL_DOWNLOAD" ;
   version: string;

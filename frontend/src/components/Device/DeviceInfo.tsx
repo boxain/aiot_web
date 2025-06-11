@@ -25,9 +25,9 @@ const DeviceInfo: React.FC<DeviceInfoProps> = ({ device, setDevice }) => {
                     <Info className="w-6 h-6 mr-2 text-indigo-500" /> Device Information
                 </h2>
                 <div className="space-y-4 text-sm text-gray-700">
-                    <InfoItem icon={<Server size={18} />} label="Device Name" value={device?.name} />
-                    <InfoItem icon={<Cpu size={18} />} label="Processor" value={"N/A"} />
-                    <InfoItem icon={<Info size={18} />} label="MAC Address" value={device?.mac} />
+                    <InfoItem icon={<Server size={18} />} label="Device Name" value={device.name} />
+                    <InfoItem icon={<Cpu size={18} />} label="Chip" value={device.chip} />
+                    <InfoItem icon={<Info size={18} />} label="MAC Address" value={device.mac} />
                     <InfoItem icon={<Info size={18} />} label="Firmware Version" value={device.firmware_name ?? "N/A"} />
                     <InfoItem icon={<MemoryStick size={18} />} label="Model Name" value={device.model_name ?? "N/A"} />
                     <InfoItem icon={<Battery size={18} />} label="Battery Level" value={"N/A"} /> {/* Replace with actual data */}
