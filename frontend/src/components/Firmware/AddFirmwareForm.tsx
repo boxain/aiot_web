@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 import { AddFirmwareFormProps } from '@/components/firmware/types';
 import uploadFirmwaresAPI from '@/api/firmware/uploadFirmwareAPI';
-
+import { processApiError } from '@/lib/error'; 
 
 const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose, setFirmwares }) => {
   const [firmwareName, setFirmwareName] = useState('');
@@ -28,20 +29,24 @@ const AddFirmwareForm: React.FC<AddFirmwareFormProps> = ({ onClose, setFirmwares
     setIsLoading(true);
     try{
       const result = await uploadFirmwaresAPI(firmwareFile, firmwareName, description);
-      if(result.success){
+      // Clean all state
+      setFirmwareName('');
+      setDescription('');
+      setFirmwareFile(null);
+      onClose();
+      
+      const firmware = result.data.firmwares[0];
+      setFirmwares((prev) => [...prev, {...firmware, created_time: format(new Date(firmware.created_time), 'yyyy/MM/dd HH:mm')}])
+      
+    }catch(error){
+      const processedError = processApiError(error);
+      const displayMessage = `[${processedError.code}] ${processedError.message}`;
+      toast.error(displayMessage);
 
-        // Clean all state
-        setFirmwareName('');
-        setDescription('');
-        setFirmwareFile(null);
-        // Close form
-        onClose();
-        // Update firmwares list
-        const firmware = result.data.firmwares[0];
-        setFirmwares((prev) => [...prev, {...firmware, created_time: format(new Date(firmware.created_time), 'yyyy/MM/dd HH:mm')}])
-
-      }else{
-        alert("Upload failed");
+      if (processedError.details) {
+          console.error("API Error Details:", processedError.details);
+      } else {
+          console.error("Caught Error:", error);
       }
     }finally{
       setIsLoading(false);

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
-import { X, PlusCircle, Trash2 } from 'lucide-react'; // Added PlusCircle and Trash2
+import toast from 'react-hot-toast';
+import { X, PlusCircle, Trash2 } from 'lucide-react';
 import { AddModelFormProps, ModelTypeOption } from '@/components/model/types';
-import uploadModelAPI from '@/api/model/uploadModelAPI'; // Assuming this API will be adapted or replaced for models with labels
+import uploadModelAPI from '@/api/model/uploadModelAPI';
+import { processApiError } from '@/lib/error'; 
 
 const AddModelForm: React.FC<AddModelFormProps> = ({ onClose, setModels }) => {
   const modelTypeOptions: ModelTypeOption[] = ['Classification', 'Object Detection'];
@@ -65,31 +67,26 @@ const AddModelForm: React.FC<AddModelFormProps> = ({ onClose, setModels }) => {
       const labels_str = JSON.stringify(formattedLabels);
       const result = await uploadModelAPI(modelFile, modelName, description, modelType, labels_str);
       
-      if (result.success) {
-        // Clean all state
-        setModelName('');
-        setDescription('');
-        setModelFile(null);
-        setLabels([]); // Clear labels state
-        
-        // Close form
-        onClose();
-        
-        // Update models list (assuming firmwares[0] is the convention for the new item)
-        // You might need to adjust how the new model (with labels) is added to the list.
-        // For example, if result.data contains the full model including labels:
-        // const newModelData = { ...result.data.firmwares[0], labels: formattedLabels };
-        // setModels((prev) => [...prev, newModelData]);
-        
-        const model = result.data.models[0];
-        setModels((prev) => [...prev, {...model, created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')} ]); 
+      // Clean all state
+      setModelName('');
+      setDescription('');
+      setModelFile(null);
+      setLabels([]);
+      onClose();
+    
+      const model = result.data.models[0];
+      setModels((prev) => [...prev, {...model, created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')} ]); 
 
-      } else {
-        alert("Upload failed: " + (result.message || "An unknown error occurred."));
-      }
     } catch (error) {
-        console.error("Upload error:", error);
-        alert("An error occurred during upload. Please check the console for details.");
+      const processedError = processApiError(error);
+      const displayMessage = `[${processedError.code}] ${processedError.message}`;
+      toast.error(displayMessage);
+
+      if (processedError.details) {
+          console.error("API Error Details:", processedError.details);
+      } else {
+          console.error("Caught Error:", error);
+      }
     }
     finally {
       setIsLoading(false);

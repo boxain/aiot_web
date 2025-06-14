@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, ListRestart } from 'lucide-react';
 import { format } from 'date-fns';
-
+import toast from 'react-hot-toast';
 import { Firmware } from '@/components/firmware/types';
 import { FirmwareSelectionProps } from '@/components/device/types';
 import otaAPI from '@/api/device/otaAPI';
 import getFirmwaresAPI from '@/api/firmware/getFirmwaresAPI';
+import { processApiError } from '@/lib/error'; 
 
 
 const FirmwareListItem = ({ firmware, isSelected, onSelect }: { firmware: Firmware; isSelected: boolean; onSelect: (id: string) => void; }) => {
@@ -40,18 +41,24 @@ const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ setDevices, selec
         const getFirmwares = async () => {
             try{
                 const result = await getFirmwaresAPI();
-                if(result.success){
+                const formattedFirmwares = result.data.firmwares.map((fm: Firmware) => {
+                    return {
+                        ...fm,
+                        created_time: format(new Date(fm.created_time), 'yyyy/MM/dd HH:mm')
+                    }
+                })
 
-                    const formattedFirmwares = result.data.firmwares.map((fm: Firmware) => {
-                        return {
-                            ...fm,
-                            created_time: format(new Date(fm.created_time), 'yyyy/MM/dd HH:mm')
-                        }
-                    })
+                setFirmwares(formattedFirmwares)
 
-                    setFirmwares(formattedFirmwares)
-                }else{
-                    alert("Get devices failed")
+            }catch(error){
+                const processedError = processApiError(error);
+                const displayMessage = `[${processedError.code}] ${processedError.message}`;
+                toast.error(displayMessage);
+
+                if (processedError.details) {
+                    console.error("API Error Details:", processedError.details);
+                } else {
+                    console.error("Caught Error:", error);
                 }
             }finally{
                 setIsGetFirmwares(false);
@@ -74,21 +81,27 @@ const FirmwareSelection: React.FC<FirmwareSelectionProps> = ({ setDevices, selec
 
         try{
             setIsOTAUpdate(true);
-            const result = await otaAPI(selectedDevices, selectedFirmwareId);
-            if(result.success){
-                alert(result.message);
-                setDevices(prev =>
-                    prev.map(device => {
-                        if(device.id === selectedDevices[0]){
-                            return { ...device, busy_reason: "OTA", status: "busy"}
-                        }else{
-                            return device
-                        }
-                    })
-                );
-                handleCancelClick();
-            }else{
-                alert(result.message);
+            await otaAPI(selectedDevices, selectedFirmwareId);
+            setDevices(prev =>
+                prev.map(device => {
+                    if(device.id === selectedDevices[0]){
+                        return { ...device, busy_reason: "OTA", status: "busy"}
+                    }else{
+                        return device
+                    }
+                })
+            );
+            handleCancelClick();
+
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
         }finally{
             setIsOTAUpdate(false);

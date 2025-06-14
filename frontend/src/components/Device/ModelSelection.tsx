@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Check, ListRestart, ChevronDown, ChevronUp } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 import { Model } from '@/components/model/types';
 import { ModelSelectionProps } from '@/components/device/types';
 import getModelsAPI from '@/api/model/getModelsAPI';
 import modelDeploymentAPI from '@/api/device/modelDeploymentAPI';
+import { processApiError } from '@/lib/error';
 
 
 const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelected: boolean; onSelect: (id: string) => void; }) => {  
@@ -105,19 +107,26 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({ selectedDevices, showSe
         const getModels = async () => {
             try{
                 const result = await getModelsAPI();
-                if(result.success){
+                const formattedModels = result.data.models.map((model: Model) => {
+                    return {
+                        ...model,
+                        created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')
+                    }
+                })
 
-                    const formattedModels = result.data.models.map((model: Model) => {
-                        return {
-                            ...model,
-                            created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')
-                        }
-                    })
+                setModels(formattedModels)
 
-                    setModels(formattedModels)
-                }else{
-                    alert("Get model failed")
+            }catch(error){
+                const processedError = processApiError(error);
+                const displayMessage = `[${processedError.code}] ${processedError.message}`;
+                toast.error(displayMessage);
+
+                if (processedError.details) {
+                    console.error("API Error Details:", processedError.details);
+                } else {
+                    console.error("Caught Error:", error);
                 }
+  
             }finally{
                 setIsGetModels(false);
             }
@@ -139,12 +148,18 @@ const ModelSelection: React.FC<ModelSelectionProps> = ({ selectedDevices, showSe
 
         try{
             setIsDeploymentUpdate(true);
-            const result = await modelDeploymentAPI(selectedDevices, selectedModelId);
-            if(result.success){
-                alert(result.message);
-                handleCancelClick();
-            }else{
-                alert(result.message);
+            await modelDeploymentAPI(selectedDevices, selectedModelId);
+            handleCancelClick();
+
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
         }finally{
             setIsDeploymentUpdate(false);

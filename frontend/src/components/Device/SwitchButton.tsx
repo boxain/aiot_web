@@ -1,6 +1,8 @@
 import { PowerCircle, Clock,  } from "lucide-react";
+import toast from 'react-hot-toast';
 import { SwitchButtonProps } from "@/components/device/types";
 import switchModeAPI from "@/api/device/switchModeAPI";
+import { processApiError } from '@/lib/error'; 
 
 const SwitchButton: React.FC<SwitchButtonProps> = ({ device, setDevice, activeMode, setActiveMode, isSwitchMode, setIsSwitchMode }) => {
 
@@ -12,18 +14,24 @@ const SwitchButton: React.FC<SwitchButtonProps> = ({ device, setDevice, activeMo
         setIsSwitchMode(true);
         try{
             const result = await switchModeAPI(device.id, mode);
-            if(result.success){
-                setDevice(prevDevice => {
-                    if(!prevDevice) return null;
-                    return {
-                        ...prevDevice,
-                        status: "busy",
-                        busy_reason: "MODE_SWITCH"
-                    }
-                })
-                //setActiveMode(mode);
-            }else{
-                alert("Switch Mode Failed");
+            setDevice(prevDevice => {
+                if(!prevDevice) return null;
+                return {
+                    ...prevDevice,
+                    status: "busy",
+                    busy_reason: "MODE_SWITCH"
+                }
+            })
+            //setActiveMode(mode);
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
         } finally{
             setIsSwitchMode(false);

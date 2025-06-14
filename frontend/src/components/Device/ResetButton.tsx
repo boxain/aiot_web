@@ -1,7 +1,8 @@
 import { RefreshCw, AlertTriangle } from "lucide-react";
+import toast from 'react-hot-toast';
 import { ResetButtonProps } from "@/components/device/types";
 import resetDeviceAPI from '@/api/device/restartDeviceAPI';
-
+import { processApiError } from '@/lib/error'; 
 
 const ResetButton: React.FC<ResetButtonProps> = ({ device_id , device_status, isResetDevice, setIsResetDevice }) => {
 
@@ -14,14 +15,17 @@ const ResetButton: React.FC<ResetButtonProps> = ({ device_id , device_status, is
         setIsResetDevice(true);
         try{
             const result = await resetDeviceAPI(device_id);
-            if(result.success){
-                // Add success notification
-                alert("Device restarting...");
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
             } else {
-                alert("Reset Failed"); // Replace with better notification
-                console.error("Reset failed:", result.message);
+                console.error("Caught Error:", error);
             }
-        } finally {
+        }finally {
             setIsResetDevice(false);
         }
     };

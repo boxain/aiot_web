@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { FirmwareProps } from '@/components/firmware/types';
+import toast from 'react-hot-toast';
 import { Trash2 } from 'lucide-react';
 import deleteFirmwaresAPI from '@/api/firmware/deleteFirmwareAPI';
+import { processApiError } from '@/lib/error'; 
+
 
 const FirmwareCard = ({ firmware, setFirmwares } : FirmwareProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,11 +14,17 @@ const FirmwareCard = ({ firmware, setFirmwares } : FirmwareProps) => {
     try{
       setIsLoading(true);
       const result = await deleteFirmwaresAPI(id);
-      if(result.success){
-        alert("Delete firmware success !");
-        setFirmwares((prev) => prev.filter((fm => fm.id !== id)))
-      }else{
-        alert("Delete firmware failed....");
+      setFirmwares((prev) => prev.filter((fm => fm.id !== id)))
+
+    }catch(error){
+      const processedError = processApiError(error);
+      const displayMessage = `[${processedError.code}] ${processedError.message}`;
+      toast.error(displayMessage);
+
+      if (processedError.details) {
+          console.error("API Error Details:", processedError.details);
+      } else {
+          console.error("Caught Error:", error);
       }
     }finally{
       setIsLoading(false)

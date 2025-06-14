@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react"
+import toast from 'react-hot-toast';
 import { useWs } from '@/context/WebSocketContext';
 import { ImageIcon } from "lucide-react";
 import { InferenceSectionProps } from "@/components/device/types";
 import inferenceAPI from "@/api/device/inferenceAPI";
+import { processApiError } from '@/lib/error'; 
+
 
 const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, device_status, activeMode, isInference, setIsInference }) => {
     const { deviceImages, setDeviceImages } = useWs();
@@ -45,10 +48,16 @@ const InferenceSection: React.FC<InferenceSectionProps> = ({ device_id, device_s
         if(isInference) return;
         setIsInference(true);
         try{
-            const result = await inferenceAPI(device_id);
-            if(!result.success){
-                alert("Inference Failed"); 
-                console.error("Reset failed:", result.message);
+            await inferenceAPI(device_id);
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
         } finally {
             setIsInference(false);

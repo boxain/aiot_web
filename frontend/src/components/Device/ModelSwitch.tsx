@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, ListRestart, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
-
+import toast from 'react-hot-toast';
 import { Model } from '@/components/model/types';
+import Loading from '@/components/Loading';
 import { ModelSwitchProps } from '@/components/device/types';
 import getModelsWithDeviceIdAPI from '@/api/model/getModelsWithDeviceIdAPI';
 import modelSwitchAPI from '@/api/device/modelSwitchAPI';
-import Loading from '@/components/Loading';
+import { processApiError } from '@/lib/error';
+
 
 
 const ModelListItem = ({ model, isSelected, onSelect }: { model: Model; isSelected: boolean; onSelect: (id: string) => void; }) => {  
@@ -146,22 +148,28 @@ const ModelSwitch: React.FC<ModelSwitchProps> = ({ device, setDevice, showSwitch
         try{
             setIsDeploymentUpdate(true);
             const result = await modelSwitchAPI(device.id, selectedModelId);
-            if(result.success){
-                alert(result.message);
-                handleCancelClick();
+            handleCancelClick();
 
-                setDevice(prevDevice => {
-                    if(!prevDevice) return null;
-                    return {
-                        ...prevDevice,
-                        status: "busy",
-                        busy_reason: "MODEL_SWITCH"
-                    }
-                })
+            setDevice(prevDevice => {
+                if(!prevDevice) return null;
+                return {
+                    ...prevDevice,
+                    status: "busy",
+                    busy_reason: "MODEL_SWITCH"
+                }
+            })
+        
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
 
-            }else{
-                alert(result.message);
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
+
         }finally{
             setIsDeploymentUpdate(false);
         }

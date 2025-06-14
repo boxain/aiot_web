@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Plus, BrainCircuit } from 'lucide-react';
+import toast from 'react-hot-toast';
 import AddModelForm from '@/components/model/AddModelForm';
 import ModelCard from '@/components/model/ModelCard';
 import Loading from '@/components/Loading';
 import { Model } from '@/components/model/types';
 import getModelsAPI from '@/api/model/getModelsAPI';
+import { processApiError } from '@/lib/error';
 
 const ModelsDashboard = () => {
     const [models, setModels] = useState<Model[]>([]);
@@ -20,25 +22,31 @@ const ModelsDashboard = () => {
         const getModels = async () => {
             try{
                 const result = await getModelsAPI();
-                if(result.success){
+                const formattedModels = result.data.models.map((model: Model) => {
+                    return {
+                        ...model,
+                        created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')
+                    }
+                })
+                setModels(formattedModels)
 
-                    const formattedModels = result.data.models.map((model: Model) => {
-                        return {
-                            ...model,
-                            created_time: format(new Date(model.created_time), 'yyyy/MM/dd HH:mm')
-                        }
-                    })
-                    setModels(formattedModels)
+                const initialShowLabels: Record<string, boolean> = {};
+                formattedModels.forEach((model: Model) => {
+                    initialShowLabels[model.id] = false;
+                });
+                setShowLabels(initialShowLabels);
 
-                    const initialShowLabels: Record<string, boolean> = {};
-                    formattedModels.forEach((model: Model) => {
-                        initialShowLabels[model.id] = false;
-                    });
-                    setShowLabels(initialShowLabels);
+            }catch(error){
+                const processedError = processApiError(error);
+                const displayMessage = `[${processedError.code}] ${processedError.message}`;
+                toast.error(displayMessage);
 
-                }else{
-                    alert("Get models failed")
+                if (processedError.details) {
+                    console.error("API Error Details:", processedError.details);
+                } else {
+                    console.error("Caught Error:", error);
                 }
+
             }finally{
                 setIsGetModels(false);
             }

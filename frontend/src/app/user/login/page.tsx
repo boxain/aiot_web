@@ -4,9 +4,10 @@ import { useState, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
-
+import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import loginAPI from '@/api/user/login';
+import { processApiError } from '@/lib/error'; 
 
 export default function Login() {
     const { login, user } = useAuth();
@@ -28,12 +29,19 @@ export default function Login() {
 
             setIsSignIn(true);
             const result = await loginAPI(userName, password);
-            if(result.success){
-                const { access_token, token_type, data } = result;
-                const { user_id, username, email } = data;
-                login(user_id, username, email, access_token, token_type);
-            }else{
-                alert("Login failed");
+            const { access_token, token_type, data } = result;
+            const { user_id, username, email } = data;
+            login(user_id, username, email, access_token, token_type);
+        
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
 
         }finally{

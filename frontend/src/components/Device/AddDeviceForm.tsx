@@ -1,7 +1,9 @@
-'use client'; // This is a Client Component
+'use client';
 
 import { useState } from 'react';
-import connectionDeviceAPI from '@/api/device/connectionAPI'; // Assuming this is your API function
+import toast from 'react-hot-toast';
+import connectionDeviceAPI from '@/api/device/connectionAPI'; 
+import { processApiError } from '@/lib/error'; 
 
 // Define the props for the component
 interface AddDeviceFormProps {
@@ -12,30 +14,27 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ onClose }) => {
     const [ssid, setSsid] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const handleFormSubmit = async () => {
         if(!ssid || !password){
-            setError("Please fill all the fields.");
             return;
         }
         if (isSubmitting) return;
-        setError(null); 
         setIsSubmitting(true);
-
         try {
+            await connectionDeviceAPI(ssid, password);
+            onClose(); 
 
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
 
-            const result = await connectionDeviceAPI(ssid, password);
-            if (result.success) {
-                alert(result.message || "Device connected successfully!");
-                onClose(); // Close the modal on success
-            } else {     
-                setError(result.message || "Failed to connect device.");
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
-        } catch (err) {
-            console.error("Error connecting device:", err);
-            setError("An unexpected error occurred."); 
         } finally {
             setIsSubmitting(false);
         }
@@ -44,7 +43,6 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ onClose }) => {
     const handleCancelClick = () => {
         setSsid('');
         setPassword('');
-        setError(null); 
         onClose();
     };
 
@@ -72,11 +70,11 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ onClose }) => {
             </div>
 
             {/* Error Message Display */}
-            {error && (
+            {/* {error && (
                 <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
                     <p>{error}</p>
                 </div>
-            )}
+            )} */}
 
 
             <div>

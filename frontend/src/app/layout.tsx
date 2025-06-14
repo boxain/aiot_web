@@ -1,6 +1,7 @@
 "use client"
 
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 import Sidebar from "@/components/Sidebar";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { WebSocketProvider } from "@/context/WebSocketContext";
@@ -23,6 +24,7 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
   return (
     <html>
       <body>
+        <Toaster reverseOrder={false}/>
         <AuthProvider>
           <WebSocketProvider>
             <AppContent>{children}</AppContent>

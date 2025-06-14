@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 import { Plus, HardDrive } from 'lucide-react';
 import FirmwareCard from '@/components/firmware/FirmwareCard';
 import Loading from '@/components/Loading';
 import { Firmware } from '@/components/firmware/types';
 import AddFirmwareForm from '@/components/firmware/AddFirmwareForm';
 import getFirmwaresAPI from '@/api/firmware/getFirmwaresAPI';
+import { processApiError } from '@/lib/error'; 
+
 
 const FirmwareDashboard = () => {
     const [firmwares, setFirmwares] = useState<Firmware[]>([]);
@@ -19,19 +22,26 @@ const FirmwareDashboard = () => {
         const getFirmwares = async () => {
             try{
                 const result = await getFirmwaresAPI();
-                if(result.success){
+                const formattedFirmwares = result.data.firmwares.map((fm: Firmware) => {
+                    return {
+                        ...fm,
+                        created_time: format(new Date(fm.created_time), 'yyyy/MM/dd HH:mm')
+                    }
+                })
 
-                    const formattedFirmwares = result.data.firmwares.map((fm: Firmware) => {
-                        return {
-                            ...fm,
-                            created_time: format(new Date(fm.created_time), 'yyyy/MM/dd HH:mm')
-                        }
-                    })
+                setFirmwares(formattedFirmwares)
 
-                    setFirmwares(formattedFirmwares)
-                }else{
-                    alert("Get devices failed")
+            }catch(error){
+                const processedError = processApiError(error);
+                const displayMessage = `[${processedError.code}] ${processedError.message}`;
+                toast.error(displayMessage);
+
+                if (processedError.details) {
+                    console.error("API Error Details:", processedError.details);
+                } else {
+                    console.error("Caught Error:", error);
                 }
+
             }finally{
                 setIsGetFirmwares(false);
             }

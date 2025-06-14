@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, ArrowLeft } from "lucide-react";
+import toast from 'react-hot-toast';
 
 import { Device } from './types'; 
 import { useWs } from '@/context/WebSocketContext';
@@ -13,8 +14,8 @@ import DeviceLog from '@/components/device/DeviceLog';
 import SwitchButton from '@/components/device/SwitchButton';
 import ResetButton from '@/components/device/ResetButton';
 import InferenceSection from '@/components/device/InferenceSection';
-
 import getDeviceAPI from '@/api/device/getDeviceAPI';
+import { processApiError } from '@/lib/error'; 
 
 
 const DeviceDetail = () => {
@@ -35,21 +36,22 @@ const DeviceDetail = () => {
           try{
               setIsGetDevice(true);
               const result = await getDeviceAPI(id);
-              
-              if(result.success){
-                  setDevice(result.data.devices[0])
-                  // Assuming device object might have an initial mode
-                  if (result.data.devices[0]?.operation_model) {
-                    setActiveMode(result.data.devices[0].operation_model);
-                  }
-              }else{
-                  // Consider a more user-friendly notification system than alert()
-                  console.error("Get device failed:", result.message);
-                  alert("Failed to fetch device details. Please try again.");
+              setDevice(result.data.devices[0])
+              // Assuming device object might have an initial mode
+              if (result.data.devices[0]?.operation_model) {
+                setActiveMode(result.data.devices[0].operation_model);
               }
-          } catch (error) {
-              console.error("Error fetching device:", error);
-              alert("An error occurred while fetching device details.");
+              
+          }catch(error){
+              const processedError = processApiError(error);
+              const displayMessage = `[${processedError.code}] ${processedError.message}`;
+              toast.error(displayMessage);
+
+              if (processedError.details) {
+                  console.error("API Error Details:", processedError.details);
+              } else {
+                  console.error("Caught Error:", error);
+              }
           } finally{
               setIsGetDevice(false);
           }

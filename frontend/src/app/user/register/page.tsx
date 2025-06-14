@@ -2,9 +2,11 @@
 
 import Head from 'next/head';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import registerAPI from '@/api/user/register';
+import { processApiError } from '@/lib/error'; 
 
 
 export default function Register() {
@@ -23,11 +25,18 @@ export default function Register() {
 
             setIsSignUp(true);
             const result = await registerAPI(userName, email, password);
-            if(result.success){
-                alert("Register success");
-                router.push("/user/login");
-            }else{
-                alert("Register failed");
+            toast.success("Registration successful! Redirecting to login...");
+            router.push("/user/login");
+
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
 
         }finally{

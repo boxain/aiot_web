@@ -3,6 +3,7 @@
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import verificationAPI from "@/api/user/verifyToken";
+import { processApiError } from '@/lib/error'; 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
 
 
@@ -42,17 +43,26 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         if (!access_token || !token_type) {
             router.push("/user/login")
         }else{
-            const result = await verificationAPI(access_token, token_type);
-            if(result.success){
+            try{
+
+                const result = await verificationAPI(access_token, token_type);
                 setUser({
                     id: result.data.user_id,
                     name: result.data.username,
                     email: result.data.email
                 });
-            }else{
+
+            }catch(error){
+                const processedError = processApiError(error);
+                const displayMessage = `[${processedError.code}] ${processedError.message}`;
+
+                if (processedError.details) {
+                    console.error("API Error Details:", processedError.details);
+                } else {
+                    console.error("Caught Error:", error);
+                }
                 router.push("/user/login")
             }
-
         }
     }
 

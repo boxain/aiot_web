@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Trash2, X, Check, UploadCloud, Package } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { useWs } from '@/context/WebSocketContext';
 import DeviceCard from '@/components/device/DeviceCard';
@@ -12,6 +13,7 @@ import AddDeviceForm from '@/components/device/AddDeviceForm';
 import FirmwareSelection from '@/components/device/FirmwareSelection';
 import ModelSelection from '@/components/device/ModelSelection';
 import deleteDevicesAPI from '@/api/device/deleteDeviceAPI';
+import { processApiError } from '@/lib/error'; 
 
 const DevicesDashboard = () => {
     const { stateQueue, setStateQueue, newDevices, setNewDevices } = useWs();
@@ -29,11 +31,16 @@ const DevicesDashboard = () => {
         const getDevices = async () => {      
             try{
                 const result = await getDevicesAPI();
-                
-                if(result.success){
-                    setDevices(result.data.devices)
-                }else{
-                    alert("Get devices failed")
+                setDevices(result.data.devices)
+            }catch(error){
+                const processedError = processApiError(error);
+                const displayMessage = `[${processedError.code}] ${processedError.message}`;
+                toast.error(displayMessage);
+
+                if (processedError.details) {
+                    console.error("API Error Details:", processedError.details);
+                } else {
+                    console.error("Caught Error:", error);
                 }
             }finally{
                 setIsGetDevices(false);
@@ -151,14 +158,21 @@ const DevicesDashboard = () => {
         
         try{
             setIsDeleteingDevices(true);
-            const result = await deleteDevicesAPI(selectedDevices);
-            if(result.success){
-                alert("Delete devices success !");
-                setDevices((prev) => prev.filter((device => !selectedDevices.includes(device.id))));
-                cancleSelectDeviceMode();
-            }else{
-                alert("Delete devices failed....");
+            await deleteDevicesAPI(selectedDevices);
+            setDevices((prev) => prev.filter((device => !selectedDevices.includes(device.id))));
+            cancleSelectDeviceMode();
+
+        }catch(error){
+            const processedError = processApiError(error);
+            const displayMessage = `[${processedError.code}] ${processedError.message}`;
+            toast.error(displayMessage);
+
+            if (processedError.details) {
+                console.error("API Error Details:", processedError.details);
+            } else {
+                console.error("Caught Error:", error);
             }
+
         }finally{
             setIsDeleteingDevices(false)
         }

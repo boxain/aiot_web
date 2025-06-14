@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { ModelProps } from '@/components/model/types';
 import { Trash2, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import deleteModelAPI from '@/api/model/deleteModelAPI';
+import { processApiError } from '@/lib/error'; 
 
 const ModelCard = ({ model, setModels, showLabels, toggleLabels} : ModelProps) => {
   const [onDelete, setOnDelete] = useState(false);
@@ -11,11 +13,17 @@ const ModelCard = ({ model, setModels, showLabels, toggleLabels} : ModelProps) =
     try{
       setOnDelete(true);
       const result = await deleteModelAPI(id);
-      if(result.success){
-        alert("Delete firmware success !");
-        setModels((prev) => prev.filter((fm => fm.id !== id)))
-      }else{
-        alert("Delete model failed...");
+      setModels((prev) => prev.filter((fm => fm.id !== id)))
+
+    }catch(error){
+      const processedError = processApiError(error);
+      const displayMessage = `[${processedError.code}] ${processedError.message}`;
+      toast.error(displayMessage);
+
+      if (processedError.details) {
+          console.error("API Error Details:", processedError.details);
+      } else {
+          console.error("Caught Error:", error);
       }
     }finally{
       setOnDelete(false)
