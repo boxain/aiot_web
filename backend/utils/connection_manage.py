@@ -126,8 +126,6 @@ class ConnectionManager:
 
     @classmethod
     async def send_task_to_device(cls, user_id: str, device_id: str, task: str, task_params: Optional[Dict] = None):
-       
-
         task_id = str(uuid4())
         message = {
             "task_id": task_id,

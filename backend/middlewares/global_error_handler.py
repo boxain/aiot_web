@@ -1,98 +1,49 @@
-# https://fastapi.tiangolo.com/tutorial/handling-errors/#fastapis-httpexception-vs-starlettes-httpexception
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from fastapi.requests import Request
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from utils.exception import BasedError
 
-import utils.exception as GeneralExc
-import controllers.user.exception as UserExc
 
-
-def database_exe_handler(request: Request, exc: GeneralExc.DatabaseError):
-    response_data = {
-        "success": False,
-        "data": None,
-        "message": exc.message,
-        "error": {
+async def based_error_handler(request: Request, exc: BasedError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
             "code": exc.code,
+            "message": exc.message,
             "details": exc.details,
-        }
-    }
-    return JSONResponse(status_code=500, content=response_data)  
+        },
+    )
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    error_details = [
+        {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+        for error in exc.errors()
+    ]
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "code": "VALIDATION_ERROR",
+            "message": "Request validation failed.",
+            "details": error_details,
+        },
+    )
+
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "code": "HTTP_EXCEPTION",
+            "message": exc.detail,
+            "details": None,
+        },
+    )
 
 
-def unknown_exe_handler(request: Request, exc: GeneralExc.UnknownError):
-    response_data = {
-        "success": False,
-        "data": None,
-        "message": exc.message,
-        "error": {
-            "code": exc.code,
-            "details": exc.details,
-        }
-    }
-    return JSONResponse(status_code=500, content=response_data) 
-
-
-def invalid_token_exe_handler(request: Request, exc: GeneralExc.InValidTokenError):
-    response_data = {
-        "success": False,
-        "data": None,
-        "message": exc.message,
-        "error": {
-            "code": exc.code,
-            "details": exc.details,
-        }
-    }
-    return JSONResponse(status_code=exc.status_code, content=response_data) 
-
-
-def token_expired_exe_handler(request: Request, exc: GeneralExc.TokenExpiredError):
-    response_data = {
-        "success": False,
-        "data": None,
-        "message": exc.message,
-        "error": {
-            "code": exc.code,
-            "details": exc.details,
-        }
-    }
-    return JSONResponse(status_code=exc.status_code, content=response_data)  
-
-
-def auth_exe_handler(request: Request, exc: UserExc.AuthenticationError):
-    response_data = {
-        "success": False,
-        "data": None,
-        "message": exc.message,
-        "error": {
-            "code": exc.code,
-            "details": exc.details,
-        }
-    }
-    return JSONResponse(status_code=exc.status_code, content=response_data)  
-
-
-def user_exist_exe_handler(request: Request, exc: UserExc.UserExistError):
-    response_data = {
-        "success": False,
-        "data": None,
-        "message": exc.message,
-        "error": {
-            "code": exc.code,
-            "details": exc.details,
-        }
-    }
-    return JSONResponse(status_code=exc.status_code, content=response_data)  
-
-
-
-def global_exc_handler(app: FastAPI):
-    # General Error Handler
-    app.add_exception_handler(GeneralExc.DatabaseError, database_exe_handler)
-    app.add_exception_handler(GeneralExc.UnknownError, unknown_exe_handler)
-    app.add_exception_handler(GeneralExc.InValidTokenError, invalid_token_exe_handler)
-    app.add_exception_handler(GeneralExc.TokenExpiredError, token_expired_exe_handler)
-
-    # User Error Handler
-    app.add_exception_handler(UserExc.AuthenticationError, auth_exe_handler)
-    app.add_exception_handler(UserExc.UserExistError, user_exist_exe_handler)
+def register_exception_handlers(app: FastAPI):
+    app.add_exception_handler(BasedError, based_error_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)

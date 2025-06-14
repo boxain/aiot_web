@@ -99,7 +99,6 @@ class UserController:
         
         except UserExc.AuthenticationError:
             raise
-
         
         except SQLAlchemyError as e:
             raise GeneralExc.DatabaseError(message="login failed", details=str(e))
@@ -117,14 +116,15 @@ class UserController:
             user = result.scalar_one_or_none()
 
             if user:
-                raise Exception("Already have user")
+                raise UserExc.UserExistError(details=f"Username '{params.name}' is already taken.")
+
 
             query = select(User).where(User.email==params.email)
             result = await db.execute(query)
             user = result.scalar_one_or_none()
 
             if user:
-                raise Exception("Already have user")
+                raise UserExc.UserExistError(details=f"Email '{params.email}' is already taken.")
 
 
             user_dict = params.model_dump()
@@ -142,6 +142,10 @@ class UserController:
                 "message": "Register sucessfully."
             }
         
+        except UserExc.UserExistError:
+            raise
+
+
         except SQLAlchemyError as e:
             await db.rollback()
             raise GeneralExc.DatabaseError(message="register failed", details=str(e))

@@ -16,12 +16,19 @@ from models.device_model import Device
 from models.device_to_model_model import DeviceModelRelation
 from utils.config_manage import ConfigManage
 import utils.exception as GeneralExc
+import controllers.model.exception as ModelExc
 
 class ModelController:
     
     @classmethod
     async def create_model(cls, db: AsyncSession , file: UploadFile,  user_id: str, name: str, description: str, model_type: str, labels: str):
+        model = None
         try:
+            query = select(Model).where(Model.user_id == user_id, Model.name == name, Model.deleted_time == None)
+            result = await db.execute(query)
+            if result.scalar_one_or_none():
+                raise ModelExc.ModelAlreadyExists(details=f"Model with name '{name}' already exists.")
+    
             model_id = uuid.uuid4()
             parsed_labels = json.loads(labels)
 
@@ -48,17 +55,26 @@ class ModelController:
                 "message": "Upload model sucessfully."
             }
         
-        except json.JSONDecodeError:
-            print("Not json format")
 
+        except ModelExc.ModelAlreadyExists:
+            raise
+
+        
+        except json.JSONDecodeError as e:
+            raise ModelExc.InvalidLabelFormat(details=str(e))
+        
+
+        except IOError as e:
+            if model and model.id:
+                await db.delete(model)
+                await db.commit()
+            raise ModelExc.ModelUploadFailed(details=str(e))
 
         except SQLAlchemyError as e:
-            print(traceback.format_exc())
             await db.rollback()
             raise GeneralExc.DatabaseError(message="Create model failed.", details=str(e))
         
         except Exception as e:
-            print(traceback.format_exc())
             await db.rollback()
             raise GeneralExc.UnknownError(message="Create model failed.", details=str(e))
         
@@ -121,19 +137,25 @@ class ModelController:
     @classmethod
     async def delete_model(cls, db: AsyncSession, model_id: str, user_id: str):
         try:
-            query = select(Device)                             \
-                .where(Device.current_model_id == model_id)    \
+            query = select(Model).where(Model.user_id == user_id, Model.id == model_id, Model.deleted_time == None)
+            result = await db.execute(query)
+            if result.scalar_one_or_none() is None:
+                raise ModelExc.ModelNotFound(details=f"Model with id '{model_id}' does not exists.")
+
+            query = select(Device.id)                             \
+                .where(Device.current_model_id == model_id)       \
                 .where(Device.deleted_time == None)
             
             result = await db.execute(query)
-            device = result.scalar_one_or_none()
-            if device:
-                print(f"Error: Model has been used on the device: {device.id}")
-                return { 
-                    "success": False,
-                    "message": "Delete model failed."
-                }
+            device_id = result.scalar_one_or_none()
+            if device_id:
+                raise ModelExc.ModelInUse(details=f"Model is the active model for device ID: {device_id}")
             
+            query_relation = select(DeviceModelRelation.device_id).where(DeviceModelRelation.model_id == model_id)
+            result_relation = await db.execute(query_relation)
+            related_device_id = result_relation.scalar_one_or_none()
+            if related_device_id:
+                raise ModelExc.ModelInUse(details=f"Model has been deployed to device ID: {related_device_id}")
 
 
             query = update(Model)                         \
@@ -148,6 +170,12 @@ class ModelController:
                 "message": "Delete model sucessfully."
             }
 
+
+        except ModelExc.ModelNotFound:
+            raise
+
+        except ModelExc.ModelInUse:
+            raise
 
         except SQLAlchemyError as e:
             db.rollback()
@@ -167,10 +195,20 @@ class ModelController:
             model = result.scalar_one_or_none()
 
             if model is None:
-                print(f"Error: Model {model_id} does not exist.")
-            else:
-                path = model.file_path
-                return FileResponse(path)
+                raise ModelExc.ModelNotFound(details=f"Model with ID {model_id} not found.")
+            
+            path = model.file_path
+            if not os.path.exists(path):
+                raise ModelExc.PhysicalModelFileNotFound(details=f"File for model ID {model_id} is missing at path: {path}")
+
+            return FileResponse(path)
+
+
+        except ModelExc.ModelNotFound:
+            raise
+
+        except ModelExc.PhysicalModelFileNotFound:
+            raise
 
         except SQLAlchemyError as e:
             raise GeneralExc.DatabaseError(message="Get models failed.", details=str(e))

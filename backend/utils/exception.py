@@ -9,8 +9,8 @@ class BasedError(Exception):
 
 
 class InValidTokenError(BasedError):
-    """When given token format is invalid, throw this error class"""
-    def __init__(self, message: str = "Token is invalid", details: str = None):
+    """When given token format is invalid or  expired, throw this error class"""
+    def __init__(self, message: str = "Token is invalid or expired", details: str = None):
         super().__init__(message, details, code="TOKEN_INVALID", status_code=401)
 
 

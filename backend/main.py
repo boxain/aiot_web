@@ -8,7 +8,8 @@ from routes.device.router import router as device_router
 from routes.firmware.router import router as firmware_router
 from routes.model.router import router as model_router
 from utils.sql_manage import init_db, clean_db
-from middlewares.global_error_handler import global_exc_handler
+from middlewares.global_error_handler import register_exception_handlers
+
 
 # https://fastapi.tiangolo.com/advanced/events/#use-case
 @asynccontextmanager
@@ -19,7 +20,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-global_exc_handler(app=app)
+register_exception_handlers(app=app)
 
 # https://fastapi.tiangolo.com/tutorial/cors/#use-corsmiddleware
 origins = [
@@ -56,7 +57,6 @@ Web Version 1.0
 '''
 Device Version 1.0
 1. Model customizer ------ ( 6/12 )
-2. log ------------------- ( 6/10 )
 3. refactor -------------- ( 6/11 )
 '''
 

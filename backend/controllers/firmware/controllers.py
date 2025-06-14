@@ -13,13 +13,20 @@ from sqlalchemy import select, update
 from models.firmware_model import Firmware
 from models.device_model import Device
 from utils.config_manage import ConfigManage
+import controllers.firmware.exception as FirmwareExc
 import utils.exception as GeneralExc
 
 class FirmwareController:
     
     @classmethod
     async def create_firmware(cls, db: AsyncSession , file: UploadFile,  user_id: str, name: str, description: str):
+        firmware = None
         try:
+            query = select(Firmware).where(Firmware.user_id == user_id, Firmware.name == name, Firmware.deleted_time == None)
+            result = await db.execute(query)
+            if result.scalar_one_or_none():
+                raise FirmwareExc.FirmwareAlreadyExists(details=f"Firmware with name '{name}' already exists.")
+
             firmware_id = uuid.uuid4()
             original_filename = file.filename
             file_extension = Path(original_filename).suffix
@@ -46,13 +53,21 @@ class FirmwareController:
                 "message": "Upload firmware sucessfully."
             }
 
+
+        except FirmwareExc.FirmwareAlreadyExists:
+            raise
+
+        except IOError as e:
+            if firmware and firmware.id:
+                await db.delete(firmware)
+                await db.commit()
+            raise FirmwareExc.FileUploadFailed(details=str(e))
+
         except SQLAlchemyError as e:
-            print(traceback.format_exc())
             await db.rollback()
             raise GeneralExc.DatabaseError(message="Create firmware failed.", details=str(e))
         
         except Exception as e:
-            print(traceback.format_exc())
             await db.rollback()
             raise GeneralExc.UnknownError(message="Create firmware failed.", details=str(e))
         
@@ -84,19 +99,21 @@ class FirmwareController:
     @classmethod
     async def delete_firmware(cls, db: AsyncSession, firmware_id: str, user_id: str):
         try:
-            # check is firmware be deployed on the device
-            query = select(Device)                           \
+            # check is firmware exist and not be deployed on the device
+            query = select(Firmware).where(Firmware.user_id == user_id, Firmware.id == firmware_id, Firmware.deleted_time == None)
+            result = await db.execute(query)
+            if result.scalar_one_or_none() is None:
+                raise FirmwareExc.FirmwareNotFound(details=f"Firmware with ID {firmware_id} not found.")
+
+
+            query = select(Device.id)                           \
                 .where(Device.firmware_id == firmware_id)    \
                 .where(Device.deleted_time == None)
             
             result = await db.execute(query)
-            device = result.scalar_one_or_none()
-            if device:
-                print(f"Error: Firmware has been used on the device: {device.id}")
-                return { 
-                    "success": False,
-                    "message": "Delete firmware failed."
-                }
+            device_id = result.scalar_one_or_none()
+            if device_id:
+                raise FirmwareExc.FirmwareInUse(details=f"Firmware is in use by device ID: {device_id}")
 
 
             query = update(Firmware)                         \
@@ -110,6 +127,13 @@ class FirmwareController:
                 "success": True,
                 "message": "Delete firmware sucessfully."
             }
+
+
+        except FirmwareExc.FirmwareNotFound:
+            raise
+
+        except FirmwareExc.FirmwareInUse:
+            raise
 
 
         except SQLAlchemyError as e:
@@ -131,10 +155,20 @@ class FirmwareController:
             firmware = result.scalar_one_or_none()
 
             if firmware is None:
-                print(f"Error: firmware {firmware_id} does not exist.")
-            else:
-                path = firmware.file_path
-                return FileResponse(path)
+                raise FirmwareExc.FirmwareNotFound(details=f"Firmware with ID {firmware_id} not found.")
+            
+            path = firmware.file_path
+            if not os.path.exists(path):
+                raise FirmwareExc.PhysicalFileNotFound(details=f"File for firmware ID {firmware_id} is missing at path: {path}")
+
+            return FileResponse(path)
+
+
+        except FirmwareExc.FirmwareNotFound:
+            raise
+
+        except FirmwareExc.PhysicalFileNotFound:
+            raise
 
         except SQLAlchemyError as e:
             raise GeneralExc.DatabaseError(message="Get firmwares failed.", details=str(e))

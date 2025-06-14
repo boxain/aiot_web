@@ -23,7 +23,6 @@ const registerAPI = async (userName: string, email: string, password: string) =>
 
 
     }catch(error: any){
-
         if(error.response){
             return error.response.data
         }else {
