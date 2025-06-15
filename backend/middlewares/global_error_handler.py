@@ -42,7 +42,6 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         },
     )
 
-
 def register_exception_handlers(app: FastAPI):
     app.add_exception_handler(BasedError, based_error_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)

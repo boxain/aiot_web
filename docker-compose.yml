@@ -1,0 +1,38 @@
+services:
+  backend:
+    build: 
+      context: ./backend
+      target: production
+    container_name: web_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - database
+
+  frontend:
+    build: ./frontend
+    container_name: web_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    env_file:
+      - ./frontend/.env.local
+    depends_on:
+      - backend
+    
+  database:
+    image: postgres:16.8
+    container_name: database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=rstlab
+      - POSTGRES_DB=aiot_web
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

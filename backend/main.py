@@ -1,3 +1,4 @@
+import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,13 +47,10 @@ app.include_router(model_router, prefix="/api/model", tags=["model"])
 
 if __name__ == '__main__':
     # https://myapollo.com.tw/blog/begin-to-asyncio/#google_vignette
-    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=True, workers=1, ws_ping_interval=600, log_level="debug")
-
-'''
-Web Version 1.0
-1. Error handler --------- ( 6/11, 6/12 )
-2. Error message --------- ( 6/11, 6/12 )
-'''
+    app_env = os.getenv("APP_ENV", "production")
+    is_dev_mode = (app_env == "development")
+    print(f"Running in {app_env} mode. Hot-Reload: {is_dev_mode}")
+    uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=is_dev_mode, workers=1, ws_ping_interval=600, log_level="debug")
 
 '''
 Device Version 1.0
