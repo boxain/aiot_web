@@ -53,12 +53,6 @@ if __name__ == '__main__':
     uvicorn.run("main:app", host='0.0.0.0', port=8000, reload=is_dev_mode, workers=1, ws_ping_interval=600, log_level="debug")
 
 '''
-Device Version 1.0
-1. Model customizer ------ ( 6/12 )
-3. refactor -------------- ( 6/11 )
-'''
-
-'''
 Version 2.0
 1. MQTT
 2. Notification
